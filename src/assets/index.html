@@ -724,84 +724,327 @@
             line-height: 1.5;
         }
     </style>
+    <!-- ==== MMSI V3.8 PROFESSIONAL REDESIGN (Swiss / Enterprise Security Console) ==== -->
+    <style>
+        :root {
+            --green: #10B981;
+            --yellow: #F59E0B;
+            --red: #EF4444;
+            --orange: #F97316;
+            --dark: #101014;
+            --darker: #050506;
+            --card: #16161B;
+            --border: #2A2A31;
+            --border-strong: #3F3F46;
+            --text: #FAFAFA;
+            --muted: #B4B4BD;
+            --faint: #83838F;
+            --accent: #FFFFFF;
+            --phi: #FAFAFA;
+            --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        html, body { background: var(--darker); }
+        body {
+            font-family: var(--sans);
+            color: var(--text);
+            letter-spacing: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+        ::selection { background: var(--green); color: #000; }
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--darker); }
+        ::-webkit-scrollbar-thumb { background: #27272A; border: 2px solid var(--darker); }
+        ::-webkit-scrollbar-thumb:hover { background: #3F3F46; }
+
+        /* ---- Sharp, flat surfaces everywhere ---- */
+        .login-card, .stat-card, .comparison-card, .feature-card, .recommendation-item,
+        .finding-item, .certificate-badge, .btn, .input-group input, .upload-area,
+        .metrics-overlay, .axis-label, .file-tree li, .security-notice, .status-indicator {
+            border-radius: 0 !important;
+        }
+        .certificate-badge, .comparison-card:hover, .btn-primary:hover, .upload-area:hover, .upload-area.dragover {
+            background: var(--card) !important;
+            box-shadow: none !important;
+        }
+
+        /* ---- HUD Header ---- */
+        .hud-header {
+            height: 56px;
+            background: var(--dark);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: none;
+            padding: 0 22px;
+        }
+        .hud-title { color: var(--text); font-size: 13px; font-weight: 600; letter-spacing: -0.01em; }
+        .hud-title .logo { display: inline-flex; color: var(--green); }
+        .hud-title .logo svg { width: 18px; height: 18px; }
+        .hud-title .brandv { color: var(--faint); font-weight: 500; }
+        .status-indicator { width: 8px; height: 8px; font-size: 0; border-radius: 50% !important; }
+        .status-text { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+
+        /* ---- Panels: dense wireframe grid ---- */
+        .hud-container { grid-template-columns: 300px 1fr 360px; gap: 1px; background: var(--border); }
+        @media (max-width: 1200px) { .hud-container { grid-template-columns: 240px 1fr 300px; } }
+        .panel-left, .panel-center, .panel-right { background: var(--dark); }
+        .panel-header {
+            padding: 14px 16px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            color: var(--faint);
+            font-family: var(--mono);
+            background: var(--darker);
+        }
+
+        /* ---- Upload ---- */
+        .upload-area {
+            border: 1px dashed var(--border-strong);
+            padding: 26px 16px;
+            transition: border-color 0.15s ease, background 0.15s ease;
+        }
+        .upload-area:hover, .upload-area.dragover { border-color: var(--green); background: rgba(16,185,129,0.04) !important; }
+        .upload-area .up-ico { display: flex; justify-content: center; margin-bottom: 10px; color: var(--muted); }
+        .upload-area .up-ico svg { width: 26px; height: 26px; }
+        .upload-area p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+        /* ---- File tree ---- */
+        .file-tree li { border-radius: 0; padding: 7px 10px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+        .file-tree li:hover { background: #18181B; color: var(--text); }
+        .file-tree li.active { background: #18181B; border-left: 2px solid var(--green); color: var(--text); }
+        .file-icon { display: inline-flex; color: var(--faint); }
+        .file-icon svg { width: 14px; height: 14px; }
+
+        /* ---- Metrics overlay ---- */
+        .metrics-overlay { background: rgba(9,9,11,0.85); border: 1px solid var(--border); padding: 12px 16px; font-family: var(--mono); }
+        .metric-label { color: var(--faint); font-family: var(--mono); font-size: 11px; }
+        .metric-value { font-family: var(--mono); font-size: 12px; }
+        .metric-value.green { color: var(--green); }
+        .metric-value.yellow { color: var(--yellow); }
+        .metric-value.red { color: var(--red); }
+        .axis-label { background: rgba(9,9,11,0.85); border: 1px solid var(--border); color: var(--faint); font-family: var(--mono); font-size: 10px; }
+
+        /* ---- Tabs ---- */
+        .tabs { background: var(--darker); }
+        .tab { font-size: 12px; color: var(--muted); padding: 13px 12px; font-weight: 500; transition: color 0.15s ease, border-color 0.15s ease; }
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--text); border-bottom-color: var(--green); }
+
+        /* ---- Findings & recommendations (terminal log style) ---- */
+        .finding-item { border-radius: 0; border: 1px solid var(--border); border-left-width: 3px; background: var(--card); }
+        .finding-item.critical { border-left-color: var(--red); background: rgba(239,68,68,0.06); }
+        .finding-item.high { border-left-color: var(--orange); background: rgba(249,115,22,0.06); }
+        .finding-item.medium { border-left-color: var(--yellow); background: rgba(245,158,11,0.06); }
+        .finding-item.low { border-left-color: var(--green); background: rgba(16,185,129,0.05); }
+        .finding-type { font-family: var(--mono); font-size: 11px; letter-spacing: 0.05em; color: var(--text); }
+        .finding-severity { border-radius: 0; font-family: var(--mono); font-size: 10px; font-weight: 600; }
+        .severity-critical { background: var(--red); color: #000; }
+        .severity-high { background: var(--orange); color: #000; }
+        .severity-medium { background: var(--yellow); color: #000; }
+        .severity-low { background: var(--green); color: #000; }
+        .finding-message { font-size: 12px; color: var(--muted); }
+        .finding-location { font-family: var(--mono); font-size: 11px; color: var(--faint); }
+        .recommendation-item { border-radius: 0; border: 1px solid var(--border); background: var(--card); }
+        .rec-priority { border-radius: 0; font-family: var(--mono); font-size: 10px; font-weight: 600; }
+        .priority-critical { background: var(--red); color: #000; }
+        .priority-high { background: var(--orange); color: #000; }
+        .priority-medium { background: var(--yellow); color: #000; }
+        .priority-low { background: var(--green); color: #000; }
+
+        /* ---- Certificate ---- */
+        .certificate-badge { background: var(--card) !important; border: 1px solid var(--green); border-radius: 0; }
+        .certificate-badge h3 { color: var(--green); font-family: var(--mono); font-size: 14px; letter-spacing: 0.02em; }
+        .certificate-hash { font-family: var(--mono); }
+
+        /* ---- Buttons: sharp ---- */
+        .btn {
+            border-radius: 0;
+            border: 1px solid var(--border-strong);
+            background: transparent;
+            color: var(--text);
+            font-family: var(--sans);
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            transition: border-color 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+        }
+        .btn:hover { background: #18181B; border-color: var(--accent); }
+        .btn-primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+        .btn-primary:hover { opacity: 0.88; background: var(--accent); color: #000; }
+
+        /* ======================= LANDING PAGE ======================= */
+        .landing-page { background: var(--darker); overflow-y: auto; display: block; padding: 0; }
+        .landing-container { max-width: none; width: auto; padding: 0; }
+        .landing-shell { max-width: 1200px; margin: 0 auto; padding: 28px 40px 64px; }
+
+        /* Background grid texture */
+        .landing-page::before {
+            content: "";
+            position: fixed; inset: 0;
+            background-image:
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 64px 64px;
+            opacity: 0.25;
+            pointer-events: none;
+            mask-image: radial-gradient(circle at 30% 20%, #000 0%, transparent 75%);
+            -webkit-mask-image: radial-gradient(circle at 30% 20%, #000 0%, transparent 75%);
+        }
+        .landing-shell > * { position: relative; z-index: 1; }
+
+        /* Brand bar */
+        .brand-bar { display: flex; align-items: center; justify-content: space-between; padding-bottom: 22px; border-bottom: 1px solid var(--border); margin-bottom: 44px; }
+        .brand-mark { display: flex; align-items: center; gap: 12px; }
+        .brand-logo { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border: 1px solid var(--border-strong); color: var(--green); }
+        .brand-logo svg { width: 20px; height: 20px; }
+        .brand-name { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
+        .brand-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em; color: var(--faint); }
+        .brand-meta { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; color: var(--faint); }
+
+        .landing-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 56px; align-items: start; }
+        @media (max-width: 960px) { .landing-grid { grid-template-columns: 1fr; gap: 40px; } .landing-shell { padding: 24px 20px 48px; } }
+
+        .hero-eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; color: var(--green); margin-bottom: 18px; }
+        .hero-title { font-size: 42px; line-height: 1.05; font-weight: 700; letter-spacing: -0.03em; color: var(--text); margin-bottom: 18px; max-width: 15ch; }
+        @media (max-width: 960px) { .hero-title { font-size: 32px; } }
+        .hero-sub { font-size: 15px; line-height: 1.6; color: var(--muted); max-width: 46ch; margin-bottom: 40px; }
+
+        .feature-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); }
+        .feature-card { background: var(--dark); padding: 22px 20px; transition: background 0.15s ease; }
+        .feature-card:hover { background: #101014; }
+        .feature-ico { display: inline-flex; color: var(--green); margin-bottom: 14px; }
+        .feature-ico svg { width: 22px; height: 22px; }
+        .feature-card h3 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 7px; letter-spacing: -0.01em; }
+        .feature-card p { font-size: 12.5px; line-height: 1.55; color: var(--muted); }
+
+        /* Auth column */
+        .auth-col { position: sticky; top: 28px; display: flex; flex-direction: column; gap: 20px; }
+        .login-card { background: #17171C; border: 1px solid #313139; border-radius: 0; padding: 26px; margin-bottom: 0; box-shadow: 0 24px 60px -20px rgba(0,0,0,0.9); }
+        .login-head { display: flex; align-items: center; gap: 9px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--faint); padding-bottom: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .login-head svg { width: 15px; height: 15px; color: var(--green); }
+        .login-card h2 { text-align: left; font-size: 18px; letter-spacing: -0.01em; }
+        .login-subtitle { text-align: left; }
+        .input-group label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--faint); }
+        .input-group input { border-radius: 0; background: var(--darker); border: 1px solid var(--border-strong); font-family: var(--mono); font-size: 13px; color: var(--text); }
+        .input-group input:focus { border-color: var(--green); }
+        .input-group input::placeholder { color: #52525B; }
+        .input-hint { font-family: var(--mono); font-size: 10px; color: var(--faint); }
+        .login-btn { width: 100%; padding: 13px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+        .divider span { background: var(--dark); color: var(--faint); font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; }
+        .divider::before { background: var(--border); }
+        .guest-btn { width: 100%; padding: 11px; color: var(--muted); }
+        .security-notice { background: rgba(16,185,129,0.04); border: 1px solid rgba(16,185,129,0.18); border-radius: 0; align-items: flex-start; }
+        .notice-icon { display: inline-flex; color: var(--green); }
+        .notice-icon svg { width: 18px; height: 18px; }
+        .notice-text { font-size: 11.5px; }
+
+        .stats-preview { justify-content: stretch; gap: 1px; background: var(--border); border: 1px solid var(--border); flex-wrap: nowrap; }
+        .stat-card { flex: 1; min-width: 0; background: var(--dark); border: none; border-radius: 0; padding: 18px 12px; }
+        .stat-value { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--text); }
+        .stat-label { font-size: 10.5px; color: var(--faint); letter-spacing: 0.02em; }
+
+        /* Old center-only landing helpers neutralized */
+        .why-better-section { text-align: left; margin-bottom: 0; }
+        .why-better-section h2 { display: none; }
+        .comparison-grid { display: none; }
+        .logo-container, .landing-header { display: none; }
+
+        /* Entrance motion */
+        @keyframes rise { from { transform: translateY(12px); } to { transform: translateY(0); } }
+        .hero-eyebrow, .hero-title, .hero-sub, .feature-grid, .auth-col { animation: rise 0.45s ease both; }
+        .hero-title { animation-delay: 0.05s; }
+        .hero-sub { animation-delay: 0.1s; }
+        .feature-grid { animation-delay: 0.16s; }
+        .auth-col { animation-delay: 0.22s; }
+    </style>
 </head>
 <body>
     <!-- Landing Page: Emergent Account Login -->
     <div id="landingPage" class="landing-page">
-        <div class="landing-container">
-             <div class="landing-header">
-                <div class="logo-container">
-                    <div class="logo-icon">⚡</div>
-                    <div class="logo-text">MMSI V3.8 Code Auditor</div>
-                </div>
-                <div class="logo-subtext">Zero-Egress • Deterministisch • Offline</div>
-            </div>
-            
-            <!-- Why Better Section -->
-            <div class="why-better-section">
-                <h2>Warum MMSI V3.8 besser ist als andere Audit-Tools</h2>
-                <div class="comparison-grid">
-                    <div class="comparison-card">
-                        <div class="comparison-icon">🔒</div>
-                        <h3>Zero-Egress</h3>
-                        <p>Andere Tools senden Ihren Code zu externen Servern. MMSI V3.8 führt alle Analysen lokal im Browser durch — Ihr Code verlässt niemals Ihr Gerät.</p>
-                    </div>
-                    <div class="comparison-card">
-                        <div class="comparison-icon">⚡</div>
-                        <h3>WASM-Beschleunigt</h3>
-                        <p>Die C++-Engine läuft als WebAssembly mit Web Workers für parallele Verarbeitung. Bis zu 10x schneller als reine JavaScript-Auditoren.</p>
-                    </div>
-                    <div class="comparison-card">
-                        <div class="comparison-icon">🎯</div>
-                        <h3>20 Sicherheitsmuster</h3>
-                        <p>Nicht nur 5-10 Muster wie andere Tools, sondern 20 präzise definierte Sicherheitsmuster inkl. Supply-Chain- und Runtime-Analyse.</p>
-                    </div>
-                    <div class="comparison-card">
-                        <div class="comparison-icon">📊</div>
-                        <h3>Feldtheorie-Metriken</h3>
-                        <p>Deterministische Bewertung durch kognitive Vektorfelder — keine willkürlichen Scores, sondern mathematisch fundierte Analyse.</p>
-                    </div>
-                    <div class="comparison-card">
-                        <div class="comparison-icon">🏆</div>
-                        <h3>Zero-Defect-Zertifikat</h3>
-                        <p>Andere Tools geben nur Warnungen. MMSI V3.8 stellt ein kryptografisch signiertes Zero-Defect-Zertifikat für fehlerfreie Codequalität aus.</p>
-                    </div>
-                    <div class="comparison-card">
-                        <div class="comparison-icon">🌐</div>
-                        <h3>Multi-Language</h3>
-                        <p>Unterstützt JS/TS, HTML, CSS, Java/Kotlin, Swift und Python — andere Tools meist nur JavaScript.</p>
+        <div class="landing-shell">
+            <header class="brand-bar">
+                <div class="brand-mark">
+                    <span class="brand-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+                    <div>
+                        <div class="brand-name">MMSI V3.8 Code Auditor</div>
+                        <div class="brand-tag">DETERMINISTIC FIELD-THEORY ENGINE</div>
                     </div>
                 </div>
-            </div>
+                <div class="brand-meta">ZERO-EGRESS · DETERMINISTISCH · OFFLINE</div>
+            </header>
+
+            <div class="landing-grid">
+                <section class="hero-col">
+                    <div class="hero-eyebrow">FELDTHEORIE-BASIERTES CODE-AUDIT</div>
+                    <h1 class="hero-title">Präzises Code-Audit. Kein Server. Kein Datenabfluss.</h1>
+                    <p class="hero-sub">MMSI V3.8 analysiert Ihren Quellcode vollständig lokal im Browser — deterministische Feldtheorie-Metriken, 20 Sicherheitsmuster und ein kryptografisch signiertes Zero-Defect-Zertifikat. Ihr Code verlässt niemals Ihr Gerät.</p>
+
+                    <div class="feature-grid" data-testid="feature-grid">
+                        <div class="feature-card">
+                            <span class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+                            <h3>Zero-Egress</h3>
+                            <p>Andere Tools senden Ihren Code an externe Server. MMSI V3.8 rechnet vollständig lokal im Browser.</p>
+                        </div>
+                        <div class="feature-card">
+                            <span class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8z"/></svg></span>
+                            <h3>WASM-Beschleunigt</h3>
+                            <p>Die C++-Engine läuft als WebAssembly mit Web Workers — bis zu 10× schneller als reine JS-Auditoren.</p>
+                        </div>
+                        <div class="feature-card">
+                            <span class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg></span>
+                            <h3>20 Sicherheitsmuster</h3>
+                            <p>Präzise definierte Hard-Gate-Muster inklusive Supply-Chain- und Runtime-Analyse.</p>
+                        </div>
+                        <div class="feature-card">
+                            <span class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 5-6"/></svg></span>
+                            <h3>Feldtheorie-Metriken</h3>
+                            <p>Deterministische Bewertung über kognitive Vektorfelder — mathematisch fundiert, keine Zufallsscores.</p>
+                        </div>
+                        <div class="feature-card">
+                            <span class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 8.5C8 19.5 5 16.5 5 12V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
+                            <h3>Zero-Defect-Zertifikat</h3>
+                            <p>Kryptografisch signiertes Zertifikat für fehlerfreie Codequalität statt bloßer Warnungen.</p>
+                        </div>
+                        <div class="feature-card">
+                            <span class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.6 2.7 2.6 15.3 0 18M12 3c-2.6 2.7-2.6 15.3 0 18"/></svg></span>
+                            <h3>Multi-Language</h3>
+                            <p>JS/TS, HTML, CSS, Java/Kotlin, Swift und Python — andere Tools meist nur JavaScript.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <aside class="auth-col">
             
-            <div class="login-card">
-                <h2>Emergent Konto Anmeldung</h2>
+            <div class="login-card" data-testid="login-card">
+                <div class="login-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> EMERGENT KONTO</div>
+                <h2>Anmeldung</h2>
                 <p class="login-subtitle">Deterministische Authentifizierung — keine Server, keine Cloud</p>
                 
                 <div class="login-form">
                     <div class="input-group">
                         <label for="emergentId">Emergent ID</label>
-                        <input type="text" id="emergentId" placeholder="z.B. emergent_12345678" maxlength="32">
+                        <input type="text" id="emergentId" data-testid="emergent-id-input" placeholder="z.B. emergent_12345678" maxlength="32">
                         <div class="input-hint">Wird lokal als SHA-256 Hash gespeichert</div>
                     </div>
                     
                     <div class="input-group">
                         <label for="passphrase">Passphrase</label>
-                        <input type="password" id="passphrase" placeholder="Minimale Passphrase" maxlength="128">
+                        <input type="password" id="passphrase" data-testid="passphrase-input" placeholder="Minimale Passphrase" maxlength="128">
                         <div class="input-hint">Wird mit PBKDF2 + Salt abgeleitet</div>
                     </div>
                     
-                    <button id="loginBtn" class="btn btn-primary login-btn">Anmelden</button>
+                    <button id="loginBtn" data-testid="login-button" class="btn btn-primary login-btn">Anmelden</button>
                     
                     <div class="divider">
-                        <span>oder</span>
+                        <span>ODER</span>
                     </div>
                     
-                    <button id="guestBtn" class="btn guest-btn">Als Gast fortfahren</button>
+                    <button id="guestBtn" data-testid="guest-button" class="btn guest-btn">Als Gast fortfahren</button>
                 </div>
                 
                 <div class="security-notice">
-                    <div class="notice-icon">🔒</div>
+                    <div class="notice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 8.5C8 19.5 5 16.5 5 12V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
                     <div class="notice-text">
                         <strong>Zero-Egress Garantie:</strong> Alle Anmeldedaten verbleiben lokal.
                         Keine Daten verlassen Ihr Gerät. Die Authentifizierung erfolgt
@@ -810,7 +1053,7 @@
                 </div>
             </div>
             
-            <div class="stats-preview">
+            <div class="stats-preview" data-testid="stats-preview">
                 <div class="stat-card">
                     <div class="stat-value" id="statProjectsImproved">0</div>
                     <div class="stat-label">Projekte auditiert</div>
@@ -821,8 +1064,10 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statZeroDefectCertified">0</div>
-                    <div class="stat-label">Zero-Defect-Zertifizierungen</div>
+                    <div class="stat-label">Zero-Defect zertifiziert</div>
                 </div>
+            </div>
+                </aside>
             </div>
         </div>
     </div>
@@ -830,14 +1075,14 @@
     <!-- HUD Header -->
     <div class="hud-header" style="display: none;">
         <div class="hud-title">
-            <span class="logo">⚡</span>
-            <span>MMSI V3.8 Code Auditor — Live Audit HUD</span>
+            <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+            <span>MMSI V3.8 Code Auditor <span class="brandv">— Live Audit HUD</span></span>
         </div>
         <div class="hud-status">
             <div id="statusIndicator" class="status-indicator status-green">●</div>
             <span id="statusText" class="status-text">Bereit zur Live-Überwachung</span>
-            <button id="scanBtn" class="btn" style="margin-left: 15px;">Scan starten</button>
-            <button id="logoutBtn" class="btn" style="margin-left: 10px; font-size: 11px; padding: 4px 12px;">Abmelden</button>
+            <button id="scanBtn" data-testid="scan-button" class="btn btn-primary" style="margin-left: 15px;">Scan starten</button>
+            <button id="logoutBtn" data-testid="logout-button" class="btn" style="margin-left: 10px; font-size: 11px; padding: 4px 12px;">Abmelden</button>
         </div>
     </div>
 
@@ -847,9 +1092,10 @@
         <div class="panel-left">
             <div class="panel-header">PROJEKT DATEIEN</div>
             <div class="panel-content">
-                <div class="upload-area" id="uploadArea">
-                    <p>📁 Dateien hierher ziehen oder klicken zum Durchsuchen</p>
-                    <input type="file" id="fileInput" multiple webkitdirectory style="display: none;">
+                <div class="upload-area" id="uploadArea" data-testid="upload-area">
+                    <div class="up-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg></div>
+                    <p>Dateien hierher ziehen<br>oder klicken zum Durchsuchen</p>
+                    <input type="file" id="fileInput" data-testid="file-input" multiple webkitdirectory style="display: none;">
                 </div>
                 <ul class="file-tree" id="fileTree">
                     <li style="color: var(--muted); font-style: italic;">Keine Dateien geladen</li>
@@ -891,9 +1137,9 @@
         <!-- Right Panel: Findings & Recommendations -->
         <div class="panel-right">
             <div class="tabs">
-                <div class="tab active" onclick="switchTab('findings')">Findings (<span id="findingsCount">0</span>)</div>
-                <div class="tab" onclick="switchTab('recommendations')">Empfehlungen (<span id="recsCount">0</span>)</div>
-                <div class="tab" onclick="switchTab('certificate')">Zertifikat</div>
+                <div class="tab active" data-testid="tab-findings" onclick="switchTab('findings')">Findings (<span id="findingsCount">0</span>)</div>
+                <div class="tab" data-testid="tab-recommendations" onclick="switchTab('recommendations')">Empfehlungen (<span id="recsCount">0</span>)</div>
+                <div class="tab" data-testid="tab-certificate" onclick="switchTab('certificate')">Zertifikat</div>
             </div>
             <div class="tab-content" id="tabContent">
                 <div id="findingsTab">
@@ -907,14 +1153,14 @@
         // MMSI V3.8 Constants
         const PHI = 1.61803398875;
         const OMEGA_CRITICAL = 5800.0;
-        const ZERO-DEFECT_THRESHOLD = 1.0;
+        const ZERO_DEFECT_THRESHOLD = 1.0;
         const WARNING_THRESHOLD = 0.8;
         
         // Configurable thresholds (Phase 4: UX Refinements)
         let config = {
             PHI: PHI,
             OMEGA_CRITICAL: OMEGA_CRITICAL,
-            ZERO-DEFECT_THRESHOLD: ZERO-DEFECT_THRESHOLD,
+            ZERO_DEFECT_THRESHOLD: ZERO_DEFECT_THRESHOLD,
             WARNING_THRESHOLD: WARNING_THRESHOLD,
             enableWASM: true,
             enableWorkers: true,
@@ -964,7 +1210,7 @@
         const passphraseInput = document.getElementById('passphrase');
         const statProjects = document.getElementById('statProjectsImproved');
         const statFiles = document.getElementById('statFilesAudited');
-        const statZero-Defect = document.getElementById('statZeroDefectCertified');
+        const statZeroDefect = document.getElementById('statZeroDefectCertified');
 
         // =========================================================================
         // ZERO-EGRESS AUTHENTICATION (Deterministic, Local)
@@ -1057,7 +1303,7 @@
         function updateStatsDisplay() {
             if (statProjects) statProjects.textContent = authState.stats.projectsImproved;
             if (statFiles) statFiles.textContent = authState.stats.filesAudited;
-            if (statZero-Defect) statZero-Defect.textContent = authState.stats.zeroDefectCertified;
+            if (statZeroDefect) statZeroDefect.textContent = authState.stats.zeroDefectCertified;
         }
         
         // Save stats to localStorage
@@ -1222,18 +1468,7 @@
         }
 
         function getFileIcon(language) {
-            const icons = {
-                javascript: '🟨',
-                typescript: '🔵',
-                html: '📄',
-                css: '🎨',
-                json: '{}',
-                yaml: '📝',
-                toml: '⚙️',
-                jsx: '⚛️',
-                tsx: '⚛️'
-            };
-            return icons[language] || '📄';
+            return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>';
         }
 
         function selectFile(filename) {
@@ -1287,11 +1522,11 @@
                     updatePhaseSpace(results);
                     saveToHistory(results);
                     
-                    statusText.textContent = results.isZero-Defect ? 'Zero-Defect Zertifiziert' : 
+                    statusText.textContent = results.isZeroDefect ? 'Zero-Defect Zertifiziert' : 
                                            results.isCritical ? 'Kritischer Zustand!' :
                                            results.isWarning ? 'Warnung' : 'Bereit';
                     statusIndicator.className = 'status-indicator ' + 
-                        (results.isZero-Defect ? 'status-green' : 
+                        (results.isZeroDefect ? 'status-green' : 
                          results.isCritical ? 'status-red' : 
                          results.isWarning ? 'status-yellow' : 'status-green');
 
@@ -1315,11 +1550,11 @@
             updatePhaseSpace(results);
             saveToHistory(results);
 
-            statusText.textContent = results.isZero-Defect ? 'Zero-Defect Zertifiziert' : 
+            statusText.textContent = results.isZeroDefect ? 'Zero-Defect Zertifiziert' : 
                                    results.isCritical ? 'Kritischer Zustand!' :
                                    results.isWarning ? 'Warnung' : 'Bereit';
             statusIndicator.className = 'status-indicator ' + 
-                (results.isZero-Defect ? 'status-green' : 
+                (results.isZeroDefect ? 'status-green' : 
                  results.isCritical ? 'status-red' : 
                  results.isWarning ? 'status-yellow' : 'status-green');
 
@@ -1382,7 +1617,7 @@
             const omegaT = frictionW * 14.0;
 
             const totalCritical = fileMetrics.reduce((s, m) => s + m.security.totalCritical, 0);
-            const isZero-Defect = loadY <= ZERO-DEFECT_THRESHOLD && totalCritical === 0;
+            const isZeroDefect = loadY <= ZERO_DEFECT_THRESHOLD && totalCritical === 0;
             const isCritical = omegaT >= OMEGA_CRITICAL;
             const isWarning = loadY > WARNING_THRESHOLD;
 
@@ -1402,7 +1637,7 @@
                 loadY,
                 frictionW,
                 omegaT,
-                isZero-Defect,
+                isZeroDefect,
                 isCritical,
                 isWarning,
                 totalCritical,
@@ -1411,7 +1646,7 @@
                 fileMetrics,
                 certificate: {
                     hash: certificateHash,
-                    isValid: isZero-Defect && totalCritical === 0
+                    isValid: isZeroDefect && totalCritical === 0
                 }
             };
         }
@@ -1488,7 +1723,7 @@
                 loadY,
                 frictionW,
                 omegaT,
-                isZero-Defect: loadY <= ZERO-DEFECT_THRESHOLD && security.totalCritical === 0,
+                isZeroDefect: loadY <= ZERO_DEFECT_THRESHOLD && security.totalCritical === 0,
                 isCritical: omegaT >= OMEGA_CRITICAL,
                 isWarning: loadY > WARNING_THRESHOLD
             };
@@ -1497,19 +1732,19 @@
         function updateMetrics(results) {
             loadYValue.textContent = results.loadY.toFixed(4);
             omegaValue.textContent = results.omegaT.toFixed(4);
-            zeroDefectStatus.textContent = results.isZero-Defect ? 'ZERO-DEFECT' : 
+            zeroDefectStatus.textContent = results.isZeroDefect ? 'ZERO-DEFECT' : 
                                           results.isCritical ? 'KRITISCH' :
                                           results.isWarning ? 'WARNUNG' : 'PROZESS';
             
             loadYValue.className = 'metric-value ' + 
-                (results.isZero-Defect ? 'green' : 
+                (results.isZeroDefect ? 'green' : 
                  results.isCritical ? 'red' : 
                  results.isWarning ? 'yellow' : 'green');
             omegaValue.className = 'metric-value ' + 
                 (results.isCritical ? 'red' : 
                  results.isWarning ? 'yellow' : 'green');
             zeroDefectStatus.className = 'metric-value ' + 
-                (results.isZero-Defect ? 'green' : 
+                (results.isZeroDefect ? 'green' : 
                  results.isCritical ? 'red' : 
                  results.isWarning ? 'yellow' : 'green');
         }
@@ -1532,8 +1767,8 @@
                     </div>
                     <div class="finding-message">${f.message}</div>
                     <div class="finding-location">
-                        <span>📄 ${f.file}</span>
-                        <span>📍 Zeile ${f.line}</span>
+                        <span>Datei: ${f.file}</span>
+                        <span>Zeile ${f.line}</span>
                     </div>
                 </div>
             `).join('');
@@ -1586,7 +1821,7 @@
                 z: results.aggregateCognitive.future,
                 loadY: results.loadY,
                 omegaT: results.omegaT,
-                isZero-Defect: results.isZero-Defect
+                isZeroDefect: results.isZeroDefect
             });
 
             // Limit points
@@ -1625,7 +1860,7 @@
                 const y = centerY - p.y * scale * 0.5;
                 
                 const alpha = (i + 1) / phasePoints.length;
-                const color = p.isZero-Defect ? 'rgba(0, 255, 136, ' + alpha + ')' : 
+                const color = p.isZeroDefect ? 'rgba(0, 255, 136, ' + alpha + ')' : 
                              p.loadY > WARNING_THRESHOLD ? 'rgba(255, 170, 0, ' + alpha + ')' :
                              'rgba(255, 68, 68, ' + alpha + ')';
                 
@@ -1641,7 +1876,7 @@
                 const x = centerX + (current.x - current.z) * scale * 0.5;
                 const y = centerY - current.y * scale * 0.5;
                 
-                ctx.fillStyle = current.isZero-Defect ? 'var(--green)' : 
+                ctx.fillStyle = current.isZeroDefect ? 'var(--green)' : 
                                current.loadY > WARNING_THRESHOLD ? 'var(--yellow)' : 'var(--red)';
                 ctx.beginPath();
                 ctx.arc(x, y, 8, 0, Math.PI * 2);
@@ -1696,7 +1931,7 @@
                 },
                 compliance: {
                     totalCritical: window.currentResults.totalCritical,
-                    isZero-Defect: window.currentResults.isZero-Defect
+                    isZeroDefect: window.currentResults.isZeroDefect
                 }
             };
             
@@ -1839,7 +2074,7 @@
             const omegaT = frictionW * 14.0;
 
             const totalCritical = fileMetrics.reduce((s, m) => s + m.security.totalCritical, 0);
-            const isZero-Defect = loadY <= ZERO-DEFECT_THRESHOLD && totalCritical === 0;
+            const isZeroDefect = loadY <= ZERO_DEFECT_THRESHOLD && totalCritical === 0;
             const isCritical = omegaT >= OMEGA_CRITICAL;
             const isWarning = loadY > WARNING_THRESHOLD;
 
@@ -1859,7 +2094,7 @@
                 loadY,
                 frictionW,
                 omegaT,
-                isZero-Defect,
+                isZeroDefect,
                 isCritical,
                 isWarning,
                 totalCritical,
@@ -1868,7 +2103,7 @@
                 fileMetrics,
                 certificate: {
                     hash: certificateHash,
-                    isValid: isZero-Defect && totalCritical === 0
+                    isValid: isZeroDefect && totalCritical === 0
                 }
             };
         }
@@ -1879,7 +2114,7 @@
                 timestamp: new Date().toISOString(),
                 loadY: results.loadY,
                 omegaT: results.omegaT,
-                isZero-Defect: results.isZero-Defect,
+                isZeroDefect: results.isZeroDefect,
                 totalCritical: results.totalCritical,
                 findingsCount: results.findings.length,
                 fileCount: results.fileMetrics.length
@@ -1897,7 +2132,7 @@
             // Update stats
             incrementStat('projectsImproved');
             authState.stats.filesAudited += results.fileMetrics.length;
-            if (results.isZero-Defect) {
+            if (results.isZeroDefect) {
                 incrementStat('zeroDefectCertified');
             }
             saveStats();
@@ -1952,7 +2187,7 @@
         function generateCSV(results) {
             const lines = ['Filename,Language,Total Lines,Load Y,Omega T,Critical,Zero-Defect'];
             for (const fm of results.fileMetrics) {
-                lines.push(`${fm.filename},${fm.language},${fm.totalLines},${fm.loadY.toFixed(4)},${fm.omegaT.toFixed(4)},${fm.security.totalCritical},${fm.isZero-Defect ? 'Yes' : 'No'}`);
+                lines.push(`${fm.filename},${fm.language},${fm.totalLines},${fm.loadY.toFixed(4)},${fm.omegaT.toFixed(4)},${fm.security.totalCritical},${fm.isZeroDefect ? 'Yes' : 'No'}`);
             }
             return lines.join('\n');
         }
@@ -1970,7 +2205,7 @@
                 `Load Y (W(t)): ${results.loadY.toFixed(4)}`,
                 `Friction W: ${results.frictionW.toFixed(4)}`,
                 `Omega T (Ω(t)): ${results.omegaT.toFixed(4)}`,
-                `Zero-Defect: ${results.isZero-Defect ? '✓ ZERTIFIZIERT' : '✗ NICHT ZERTIFIZIERT'}`,
+                `Zero-Defect: ${results.isZeroDefect ? '✓ ZERTIFIZIERT' : '✗ NICHT ZERTIFIZIERT'}`,
                 '',
                 'FINDINGS',
                 '--------',
@@ -2026,7 +2261,7 @@
             
             const historyText = auditHistory.map((entry, i) => {
                 const date = new Date(entry.timestamp).toLocaleString();
-                return `${i + 1}. ${date} | W(t): ${entry.loadY.toFixed(4)} | Ω(t): ${entry.omegaT.toFixed(4)} | ${entry.isZero-Defect ? '✓' : '✗'} | Findings: ${entry.findingsCount}`;
+                return `${i + 1}. ${date} | W(t): ${entry.loadY.toFixed(4)} | Ω(t): ${entry.omegaT.toFixed(4)} | ${entry.isZeroDefect ? '✓' : '✗'} | Findings: ${entry.findingsCount}`;
             }).join('\n');
             
             alert(`Audit Historie:\n\n${historyText}`);

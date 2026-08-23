@@ -1,0 +1,110 @@
+{
+  "project_context": {
+    "app_type": "Single HTML SPA (Vanilla JS + inline CSS)",
+    "constraint": "Zero-Egress. No external CDNs, no external fonts, no external images. No frameworks (No React/Tailwind).",
+    "theme": "dark"
+  },
+  "design_direction": {
+    "archetype": "Swiss & High-Contrast / Enterprise Security Console",
+    "emotion": "Authoritative, precise, mathematical, unyielding",
+    "visual_mood": "High contrast, structural grayscale, terminal-like precision"
+  },
+  "colors": {
+    "css_variables": {
+      "--bg-base": "#000000",
+      "--bg-surface": "#09090B",
+      "--bg-surface-hover": "#18181B",
+      "--border-subtle": "#27272A",
+      "--border-strong": "#52525B",
+      "--text-primary": "#FAFAFA",
+      "--text-muted": "#A1A1AA",
+      "--accent-primary": "#FFFFFF",
+      "--accent-primary-fg": "#000000",
+      "--status-success": "#10B981",
+      "--status-warning": "#F59E0B",
+      "--status-critical": "#EF4444"
+    },
+    "rules": [
+      "Never use pure black for cards, only for the deepest background.",
+      "Use #27272A for all grid borders to create a technical wireframe look.",
+      "Do not use any gradients. Only solid, flat colors."
+    ]
+  },
+  "typography": {
+    "font_stacks": {
+      "heading": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      "body": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      "mono": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
+    },
+    "rules": [
+      "Self-hosted / system fonts only.",
+      "Headlines > 24px MUST use letter-spacing: -0.02em.",
+      "Overlines/Labels (like 'PROJEKT DATEIEN') MUST be uppercase, 11px, letter-spacing: 0.1em.",
+      "Metrics and hex hashes MUST use the mono font."
+    ]
+  },
+  "layouts": {
+    "landing_page": [
+      "Remove generic centering. Align the hero text to the left.",
+      "Use a strict 2-column or 3-column CSS Grid for the 'Why Better' section with sharp 1px borders.",
+      "The login form should look like a highly secure, minimalist terminal block."
+    ],
+    "hud_dashboard": [
+      "Use a dense CSS grid (Bento style). Left panel: 280px, Center: 1fr, Right: 350px.",
+      "Remove all gaps and use border-collapse style layouts: panels touch each other separated only by 1px borders."
+    ]
+  },
+  "components": {
+    "buttons": {
+      "style": "Sharp rectangular (border-radius: 0 or 2px).",
+      "primary": "Background #FFFFFF, Text #000000. Hover: opacity 0.9.",
+      "secondary": "Background transparent, Border #27272A, Text #FAFAFA. Hover: Border #FFFFFF."
+    },
+    "cards_and_panels": {
+      "style": "Flat solid surfaces (#09090B). No glassmorphism. No soft drop shadows.",
+      "borders": "1px solid #27272A."
+    },
+    "file_tree": {
+      "style": "Tight vertical spacing. Hover state changes background to #18181B. Active state has a 2px left border of #FFFFFF."
+    },
+    "findings_list": {
+      "style": "Look like terminal output logs. Left border indicator for severity. Background slightly tinted with the severity color at 5% opacity."
+    }
+  },
+  "media_and_icons": {
+    "rules": [
+      "CRITICAL: Remove all emojis from HTML. They look unprofessional.",
+      "Replace emojis (⚡, 🔒, 🎯, 📊, 🏆, 🌐, 📁, 📄, 🎨, {}) with pure inline <svg> elements.",
+      "SVGs should use stroke='currentColor', stroke-width='1.5', fill='none', stroke-linecap='round', stroke-linejoin='round'."
+    ]
+  },
+  "motion": {
+    "rules": [
+      "Fast, utilitarian micro-interactions (0.15s ease).",
+      "No bouncy spring animations.",
+      "The 3D Phase Space canvas should be updated to use the new color palette (Emerald, Amber, Red) against the dark background."
+    ]
+  },
+  "accessibility": {
+    "rules": [
+      "All interactive elements MUST have a data-testid attribute.",
+      "Ensure contrast ratios exceed 4.5:1."
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Your objective is to drastically improve the frontend professionalism of /app/src/assets/index.html and /app/src/assets/code_auditor.html.",
+    "Both files currently have identical content; apply the redesign to BOTH files.",
+    "You MUST use Vanilla JS and inline CSS ONLY. Do not install Tailwind, React, or any other framework.",
+    "Apply the CSS variables defined in this guideline.",
+    "Refactor the DOM structure where necessary to achieve the 'Swiss Brutalist' layout.",
+    "Replace EVERY emoji with an inline SVG string.",
+    "Ensure all existing JS logic (Phase Space animation, File analysis, Authentication) remains intact and functional.",
+    "Start the app using `python3 -m http.server 8000 --directory /app/src/assets &` and test the auditor using `curl` or by writing a basic test script or using browser tools to fulfill the 'auditor testen' requirement."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "Avoid the 'AI slop' aesthetic. Create depth through sharp contrast and strict grids, not muddy gradients.",
+    "Do not center-align the app container.",
+    "NEVER use AI assistant Emoji characters. Use standard SVGs.",
+    "All interactive elements must include a data-testid attribute."
+  ]
+}
