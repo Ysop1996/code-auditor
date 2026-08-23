@@ -1,50 +1,55 @@
 # MMSI V3.8 Code Auditor — PRD
 
-## Problem statement (user)
+## Problem statement (user, German)
 "repo anschauen" → "app starten" → "frontend viel professioneller gestalten und auditor testen"
-(Look at the repo, start the app, make the frontend much more professional, and test the auditor.)
+→ "zu dunkel, überladen, Überlappungen, der Speicher/Datei-Dialog öffnet nicht; mach eine
+einfache Import-Seite, einen Ladebalken für den Auslese-Fortschritt, dann klare Audit-
+Ausarbeitung und Empfehlung."
 
-## What this project is
-A standalone, zero-network in-browser code quality & compliance auditor for the Emergent
-Builder's Contest. Users drag & drop source files; a deterministic "field-theory" engine
-scores them (cognitive vector I(t), load W(t), friction, Ω(t), golden ratio φ), flags
-20 hard-gate security patterns, runs compliance scanners (Apple/Play, DSGVO/BGB, Copyright/CVE),
-and issues a SHA-256 "Zero-Defect" certificate.
+## What it is
+Standalone, zero-network, in-browser code quality & security auditor. All analysis runs
+client-side (deterministic "field-theory" engine + 13 security-pattern scanners) and issues
+a SHA-signed Zero-Defect / Seinsmodus certificate. No server, no uploads, no cloud.
 
-## Tech stack (NOT standard React/FastAPI/Mongo)
-- Single self-contained HTML SPA: `src/assets/code_auditor.html` (+ `index.html` copy served as root)
-- Vanilla JS + inline CSS, zero external CDNs/fonts (zero-egress requirement)
-- C++ WASM engine source in `src/cpp/` (JS fallback active in browser)
-- 30 JS modules + 7 Node test suites (`npm test`)
-- Android/Gradle wrapper at repo root (separate, untouched)
+## Tech stack (NOT React/FastAPI/Mongo)
+- Single self-contained HTML SPA: `src/assets/code_auditor.html` (+ identical `index.html` served as root)
+- Vanilla JS + inline CSS, zero external CDNs/fonts (zero-egress)
+- C++ WASM engine source in `src/cpp/` — browser uses the JS fallback (fully functional)
+- Served in this env by a background `python3 -m http.server 3000` (maps to preview URL).
+  NOTE: background process, NOT supervisor-managed (won't survive a container restart).
 
-## Serving in this environment
-- No `/app/frontend` (React) exists, so supervisor frontend/backend are FATAL by design.
-- App is served via a background static server: `python3 -m http.server 3000 --directory /app/src/assets`
-  (port 3000 maps to the preview URL). NOTE: background process — does NOT survive a container restart.
+## "Blackbox after deployment?" — answer
+Yes. The audit engine is pure client-side JS (WASM has a JS fallback), so on any static host
+(Emergent/Vercel/Netlify/GitHub Pages) it behaves identically — nothing server-side is needed
+and the zero-egress guarantee is preserved.
 
-## Work done (2026-06 / this session)
-1. **Critical bug fix**: A global find-replace of "Seinsmodus"→"Zero-Defect" had corrupted JS
-   identifiers (`ZERO-DEFECT_THRESHOLD`, `isZero-Defect`, `statZero-Defect`) — hyphens are illegal
-   in JS identifiers, so the ENTIRE inline script failed to parse and every button (login, guest,
-   scan) was dead. Fixed to `ZERO_DEFECT_THRESHOLD` / `isZeroDefect` / `statZeroDefect`. JS now parses.
-2. **Professional redesign** ("Swiss / enterprise security console"): new solid dark palette,
-   sharp flat surfaces, 1px wireframe grid, system + mono typography, left-aligned hero,
-   2×3 feature grid, terminal-style login card, restyled HUD/panels/tabs/findings/certificate.
-   Replaced ALL emojis with inline stroke SVGs. Added 14 `data-testid`s. Applied to both HTML files.
-3. **Testing**:
-   - Engine (Node stub harness): detects eval/innerHTML/document.write/secret/proto-pollution/
-     path-traversal (10 critical on the vulnerable fixture), computes W(t)/Ω(t), marks clean file
-     Zero-Defect with valid cert, deterministic hash within a run. ALL PASS.
-   - Original `npm test` (7 suites) — ALL PASS.
-   - Landing page renders crisply (screenshot verified). No console JS errors on load.
+## Work log
+### Session 1 (2026-06)
+- Fixed a FATAL bug: a global "Seinsmodus"→"Zero-Defect" replace had corrupted JS identifiers
+  (`ZERO-DEFECT_THRESHOLD`, `isZero-Defect`), breaking the entire script. Fixed → script parses.
+- First professional redesign of the (then dark 3-panel HUD) landing.
 
-## Known notes / backlog
-- P2: `analyzeFiles` mixes a wall-clock `timestamp` into the certificate hash input, so the hash
-  is only deterministic within the same millisecond — README claims full determinism. Consider
-  excluding timestamp from the hashed payload for reproducible certificates.
-- P2: `audit_worker.js` is referenced by `new Worker(...)` but not present in `src/assets`; the app
-  correctly falls back to the main-thread engine.
-- P2: Static server is not supervisor-managed (won't survive restart). Could add a supervisor entry.
-- The HUD/live-audit screen wasn't screenshot-verified (the screenshot tool only auto-captures the
-  initial landing and didn't execute interaction scripts), but the engine + no-error load were verified.
+### Session 2 (2026-06) — full UX rebuild (current)
+- Rebuilt the whole app into a clean, LIGHT, linear 3-step flow: **Import → Progress → Results**.
+  Removed the dark 3-panel HUD and the 3D canvas (source of the "overlaps"/darkness).
+- Fixed the file picker: replaced `webkitdirectory` directory-picker with a normal multi-file
+  `<input>` + "Dateien auswählen" button + drag & drop → dialog now opens.
+- Added a file-reading PROGRESS BAR (per-file status + animated %).
+- Clear results page: verdict banner, 4 metric cards (kritische Befunde / Dateien / W(t) / Ω(t)),
+  detailed per-pattern findings (severity-tagged), aggregated German recommendations, per-file
+  table, certificate card, and actions (Neues Audit / Bericht exportieren / Zertifikat laden).
+- Made the certificate hash DETERMINISTIC (removed wall-clock timestamp from the hashed payload).
+- Reused the original engine verbatim: `getLanguage`, `analyzeFile`, `analyzeFiles`, `generateHash`.
+
+## Verification
+- Engine (Node stub harness): detects eval/innerHTML/document.write/secret/proto-pollution/
+  path-traversal; clean file = Zero-Defect; deterministic hash across runs. PASS.
+- testing_agent iteration_1.json: **frontend 100%** — import loads (light, no overlap), file
+  picker works, progress bar animates, vulnerable.js → 8 critical findings + NICHT-BESTANDEN cert,
+  clean.js → Zero-Defect cert + empty state, exports fire, "Neues Audit" resets. No console errors.
+
+## Backlog / notes
+- P2: `code_auditor.html` and `index.html` are duplicated — keep both in sync on every edit
+  (currently done via `cp`). Consider a symlink/build step.
+- P2: Static server not supervisor-managed (won't survive restart). Could add a supervisor entry.
+- P2: WASM `.wasm`/`audit_worker.js` not bundled; JS fallback active (by design).

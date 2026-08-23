@@ -1,0 +1,23 @@
+{
+  "summary": "Frontend-only e2e test of the static MMSI V3.8 Code Auditor (single-file vanilla JS app served at preview root). All 7 requested behaviours verified: import view loads (light theme, no overlap), file picker (multi-file, non-directory input) accepts set_input_files, progress view+bar appears, results view shows 8 critical findings for vulnerable.js containing eval/innerHTML/document.write/hardcoded secret/prototype pollution/path traversal with German recommendations and NICHT-BESTANDEN certificate, clean.js produces 'Zero-Defect zertifiziert' verdict, empty 'Keine Befunde — sauber!' state, and ZERO-DEFECT certificate. Export & certificate downloads both fire (mmsi-audit-bericht.txt, mmsi-zertifikat.txt). 'Neues Audit' returns to import view. No console errors and no page errors during the whole flow.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/01_import.png", "/app/test_reports/02_results_vuln.png", "/app/test_reports/03_results_clean.png"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Single-file HTML app is duplicated between /app/src/assets/code_auditor.html and /app/src/assets/index.html — any future edit must update both files or one should become a symlink/generated copy to avoid drift.",
+    "The 'MMSI V3.8 Code Auditor bereit' startup console log could not be captured by the Playwright listener (likely fires before listener attaches on this static page). Not a defect, just a note for future regression on the 'no console errors' assertion — errors were correctly zero."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "test_credentials": "none required",
+  "seed_data_creation": "Created /tmp/vulnerable.js (with eval, innerHTML, document.write, hardcoded password, __proto__, path traversal, nested if/for) and /tmp/clean.js (safe add/sub) as inputs.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "App is static (python http.server on 3000 -> ingress). Test at REACT_APP_BACKEND_URL root. Upload files via set_input_files on [data-testid=file-input] (multi-file, non-directory). Allow ~2-3s after upload for progress animation (~140ms/file + 450ms) before asserting [data-testid=view-results]. All data-testids listed in the request are present and functional.",
+  "rca of the issue": "n/a — no bugs found. Previous fatal script-parse error and dark/overlapping UI are gone; rebuild is clean."
+}
