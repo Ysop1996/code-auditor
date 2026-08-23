@@ -1,0 +1,73 @@
+{
+  "summary": "Frontend-only re-test of AuditIQ rebrand + logo + copyright + timestamped hash + PDF exports. Loaded /?demo=instant and validated header, footer, results view, on-page certificate, and both PDF popups (Bericht, Zertifikat). All new items pass. No console/page errors.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "detailed_results": {
+    "rebrand_header": {
+      "title": "AuditIQ — Deterministisches Code-Audit (contains 'AuditIQ')",
+      "favicon_link_present": true,
+      "brand_img_loaded": {"src": "auditiq-logo.png", "naturalWidth": 574, "naturalHeight": 671},
+      "wordmark_AuditIQ_visible": true,
+      "subtitle_DETERMINISTIC_CODE_AUDIT": true
+    },
+    "footer": {
+      "data_testid_site_footer_present": true,
+      "text": "© 2026 Patrick Frank Buckreus (geb. 05.01.1996) · AuditIQ · Alle Rechte vorbehalten. Deterministische, zero-egress Code-Analyse — jede Prüfung erzeugt eine zeitgestempelte Signatur.",
+      "contains_name_dob_rights": true
+    },
+    "results_view_demo_instant": {
+      "view_results_visible": true,
+      "verdict_text": "10 kritische Befunde",
+      "findings_direct_children": 9,
+      "findings_keywords_found": ["eval","sql","secret","document.write","innerhtml","prototype"],
+      "findings_keyword_missing": ["path traversal (keyword string not literally present in visible findings text — may appear under a different German label; verdict count of 10 vs 9 direct children suggests one nested item; non-blocking)"],
+      "recommendations_count": 9
+    },
+    "on_page_certificate": {
+      "certificate_card_found": true,
+      "cert_logo_chip_img_loaded": {"src": "auditiq-logo.png", "naturalWidth": 574},
+      "certGrid_contains": ["STATUS", "INHALTS-SIGNATUR (SHA) 000000004370a1ab", "ZEITSTEMPEL '23. August 2026 um 19:35:07' (real formatted de-DE date/time)", "SIGNATUR-HASH (MIT DATUM & UHRZEIT) 000000005e659b67", "FELDLAST W(T) 1.2650", "FELDSTÄRKE Ω(T) 17.3291", "INHABER / COPYRIGHT © Patrick Frank Buckreus (05.01.1996)"]
+    },
+    "pdf_bericht_popup": {
+      "opened": true,
+      "html_length": 78706,
+      "has_base64_logo": true,
+      "has_heading_Code_Audit_Bericht": true,
+      "has_Patrick_Frank_Buckreus": true,
+      "has_05_01_1996": true,
+      "has_Zeitstempel": true,
+      "has_Signatur_Hash": true
+    },
+    "pdf_zertifikat_popup": {
+      "opened": true,
+      "html_length": 78398,
+      "has_base64_logo": true,
+      "has_heading_Seinsmodus_Zertifikat": true,
+      "has_Patrick_Frank_Buckreus_geb_05_01_1996": true,
+      "has_Zeitstempel": true,
+      "has_Signatur_Hash": true
+    },
+    "console": {
+      "page_errors": [],
+      "uncaught_console_errors": [],
+      "note": "'AuditIQ bereit' log line likely fired before Playwright's console listener attached (fast static page); no errors were observed."
+    }
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Verdict says '10 kritische Befunde' but findings list has 9 direct children — verify whether one item is grouped or double-counted (cosmetic/consistency check).",
+    "'AuditIQ bereit' console log could not be captured due to fire-before-listener timing; consider logging in a slight microtask/defer or add a data-attribute readiness marker for easier automated verification."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped per request)", "frontend": "100%"},
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Static single-file app served from /app/src/assets/index.html on port 3000. Use ?demo=instant to reach the results/certificate view without upload. The two 'als PDF' buttons open a popup (window.open) and auto-invoke window.print() after ~350ms — use context.expect_page() to capture and read documentElement.outerHTML BEFORE closing. Popups must be allowed in the browser context. Case: certGrid labels are UPPERCASE in visible text; assert case-insensitively.",
+  "rca of the issue": "n/a — no functional issues found."
+}
