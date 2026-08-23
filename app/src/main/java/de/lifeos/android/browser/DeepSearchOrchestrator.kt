@@ -14,11 +14,23 @@ class DeepSearchOrchestrator(
 ) {
     private val browserSandbox = AnonymousBrowserSandbox(context)
     private val spectralBridge = SpectralSearchBridge(fieldEngine)
+    private val vaultSynthesisGate = VaultSynthesisGate(vaultDb, fieldEngine)
 
     fun startAnonymousSearch(
         query: String,
         onPreviewReady: (title: String, snippet: String, frictionW: Double) -> Unit
     ) {
+        // DEF-01 Fix: VaultSynthesisGate prüft vor Netzzugriff
+        val synthesisResult = vaultSynthesisGate.checkLocalSynthesis(query)
+        if (synthesisResult.canSynthesize) {
+            onPreviewReady(
+                "Vault-Synthese",
+                synthesisResult.synthesizedContent ?: "Information aus Tresor synthetisiert.",
+                synthesisResult.confidence.toDouble()
+            )
+            return
+        }
+
         browserSandbox.initializeIsolatedSession(useTorProxy = false)
         browserSandbox.executeAnonymousSearch(
             query = query,
@@ -27,6 +39,36 @@ class DeepSearchOrchestrator(
                     browserSandbox.captureFrameSignal { frameSignal ->
                         val frictionW = spectralBridge.processBrowserFrame(frameSignal)
                         onPreviewReady(title, cleanedContent.take(300), frictionW)
+                    }
+                }
+            },
+            onFrameRendered = { frameSignal -> spectralBridge.processBrowserFrame(frameSignal) }
+        )
+    }
+
+    fun navigateToUrl(
+        url: String,
+        onPageReady: (title: String, content: String, frictionW: Double) -> Unit
+    ) {
+        // DEF-01 Fix: VaultSynthesisGate prüft vor Netzzugriff
+        val synthesisResult = vaultSynthesisGate.checkLocalSynthesis(url)
+        if (synthesisResult.canSynthesize) {
+            onPageReady(
+                "Vault-Synthese",
+                synthesisResult.synthesizedContent ?: "Information aus Tresor synthetisiert.",
+                synthesisResult.confidence.toDouble()
+            )
+            return
+        }
+
+        browserSandbox.initializeIsolatedSession(useTorProxy = false)
+        browserSandbox.loadUrl(
+            url = url,
+            onPageLoaded = { title, _ ->
+                browserSandbox.extractCleanedDomText { cleanedContent ->
+                    browserSandbox.captureFrameSignal { frameSignal ->
+                        val frictionW = spectralBridge.processBrowserFrame(frameSignal)
+                        onPageReady(title, cleanedContent.take(500), frictionW)
                     }
                 }
             },

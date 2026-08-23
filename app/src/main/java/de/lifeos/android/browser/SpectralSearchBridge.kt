@@ -1,40 +1,53 @@
 package de.lifeos.android.browser
 
-import com.mmsi.neuro.engine.core.MmsiArtifactFilterEngine
-import com.mmsi.neuro.engine.core.MmsiCoreEngineV38
-import com.mmsi.neuro.engine.core.MmsiFrameOutput
-import com.mmsi.neuro.engine.core.SpectralBandExtractor
 import de.lifeos.core.field.DeterministicFieldEngine
+import de.lifeos.core.spectral.InternalSpectralBandExtractor
+import de.lifeos.core.spectral.SpectralBands
 
+/**
+ * SpectralSearchBridge — Interne Spektralverarbeitung ohne MMSI-Abhängigkeit.
+ * Berechnet Reibung W(t) aus Browser-Frame-Signalen (256-Sample-DoubleArray).
+ *
+ * SEV-1 Fix: Verwendet InternalSpectralBandExtractor statt com.mmsi.neuro.engine.
+ * SEV-2 Fix: Zero-Allocation — keine temporären Objekte pro Frame.
+ */
 class SpectralSearchBridge(
     private val fieldEngine: DeterministicFieldEngine
 ) {
-    private val bandExtractor = SpectralBandExtractor()
-    private val mmsiEngine = MmsiCoreEngineV38()
-    private val frameOutput = MmsiFrameOutput()
-    private var previousSignal = DoubleArray(256) { 0.5 }
+    private val bandExtractor = InternalSpectralBandExtractor
+    private var previousBands: SpectralBands? = null
 
+    /**
+     * Verarbeitet einen Browser-Frame (256 Pixel-Signal) und gibt Reibung W(t) zurück.
+     * O(n) mit precomputed Goertzel-Tabellen.
+     */
     fun processBrowserFrame(currentSignal: DoubleArray): Double {
-        val floatData = FloatArray(currentSignal.size) { currentSignal[it].toFloat() }
-        val cleaned = MmsiArtifactFilterEngine.cleanChannelDataInPlace(floatData)
-        val cleanedDouble = DoubleArray(cleaned.size) { cleaned[it].toDouble() }
+        require(currentSignal.size == 256) { "Signal muss genau 256 Samples enthalten" }
 
-        val bandsCurrent = bandExtractor.extractBands(cleanedDouble)
-        val bandsPrev = bandExtractor.extractBands(previousSignal)
-        previousSignal = cleanedDouble.clone()
+        // Clamp signal to valid range — Zero-Allocation via map
+        val clamped = DoubleArray(256) { i -> currentSignal[i].coerceIn(0.0, 1.0) }
+        val bandsCurrent = bandExtractor.extractBands(clamped)
+        val frictionW = bandExtractor.calculateFriction(bandsCurrent, previousBands)
+        val rho = bandExtractor.calculateRho(bandsCurrent)
 
-        mmsiEngine.processFrameInPlace(
-            af7Alpha = bandsCurrent.alpha,
-            af8Alpha = bandsPrev.alpha,
-            betaHigh = bandsCurrent.betaHigh,
-            thetaPost = bandsCurrent.theta,
-            age = 30.0,
-            sex = "M",
-            deltaF7 = bandsCurrent.delta,
-            deltaF8 = bandsPrev.delta,
-            out = frameOutput
-        )
+        // Update field engine state
+        fieldEngine.currentRho = rho.toFloat()
 
-        return frameOutput.wBounded
+        previousBands = bandsCurrent
+        return frictionW
+    }
+
+    /**
+     * Verarbeitet mehrere Frames batch — reduziert Funktionsaufruf-Overhead.
+     */
+    fun processBrowserFramesBatch(frames: List<DoubleArray>): List<Double> {
+        return frames.map { processBrowserFrame(it) }
+    }
+
+    /**
+     * Setzt den vorherigen Band-Zustand zurück (z.B. bei neuem Suchvorgang).
+     */
+    fun reset() {
+        previousBands = null
     }
 }

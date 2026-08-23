@@ -3,7 +3,7 @@ package de.lifeos.android
 import android.app.Application
 import android.content.ComponentCallbacks2
 import de.lifeos.android.security.BlackboxMemoryBridge
-import de.lifeos.android.security.TeeIntegrityGuard
+import de.lifeos.core.storage.BootStateTracker
 import net.sqlcipher.database.SQLiteDatabase
 import java.nio.ByteBuffer
 
@@ -19,7 +19,8 @@ class LifeOsApplication : Application() {
         super.onCreate()
         instance = this
         SQLiteDatabase.loadLibs(this)
-        TeeIntegrityGuard.verifySystemStateOrWipe(this, volatileKeyBuffer, null)
+        // TeeIntegrityGuard wird ERST nach BootEngine-Abschluss aktiviert
+        // -> BootStateTracker.isBootComplete muss true sein
     }
 
     override fun onTrimMemory(level: Int) {

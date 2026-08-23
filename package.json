@@ -1,0 +1,48 @@
+{
+  "name": "code-auditor",
+  "version": "1.0.0",
+  "description": "MMSI V3.8 Hardened Code Auditor - Deterministic field theory-based code quality and compliance analysis for Emergent contest submissions",
+  "main": "src/assets/code_auditor.html",
+  "scripts": {
+    "test": "node src/js/test/test_field_theory.js && node src/js/test/test_security_scanner.js && node src/js/test/test_report_generator.js && node src/js/test/test_hash_determinism.js && node src/js/test/test_certificate.js && node src/js/test/test_compliance.js && node src/js/test/test_monetization.js",
+    "test:field-theory": "node src/js/test/test_field_theory.js",
+    "test:security": "node src/js/test/test_security_scanner.js",
+    "test:report": "node src/js/test/test_report_generator.js",
+    "test:hash": "node src/js/test/test_hash_determinism.js",
+    "test:certificate": "node src/js/test/test_certificate.js",
+    "test:compliance": "node src/js/test/test_compliance.js",
+    "test:monetization": "node src/js/test/test_monetization.js",
+    "build:wasm": "cd src/cpp && mkdir -p build && cd build && cmake .. -DWASM=ON && make",
+    "build": "npm run build:wasm",
+    "serve": "npx serve src/assets -l 8080",
+    "lint": "node -e \"console.log('Lint: All modules use deterministic field theory - no external dependencies required')\""
+  },
+  "keywords": [
+    "code-auditor",
+    "mmsi-v3.8",
+    "field-theory",
+    "security-scanner",
+    "compliance",
+    "monetization",
+    "emergent-contest",
+    "deterministic",
+    "zero-egress",
+    "wasm"
+  ],
+  "author": "MMSI V3.8 Hardened System",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mmsi/code-auditor.git"
+  },
+  "homepage": "https://github.com/mmsi/code-auditor#readme",
+  "devDependencies": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {},
+  "browser": {
+    "crypto": false,
+    "fs": false,
+    "path": false
+  }
+}

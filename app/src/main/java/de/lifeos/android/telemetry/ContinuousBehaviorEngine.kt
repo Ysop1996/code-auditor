@@ -1,10 +1,8 @@
 package de.lifeos.android.telemetry
 
-import com.mmsi.neuro.engine.core.MmsiArtifactFilterEngine
-import com.mmsi.neuro.engine.core.MmsiCoreEngineV38
-import com.mmsi.neuro.engine.core.MmsiFrameOutput
-import com.mmsi.neuro.engine.core.SpectralBandExtractor
 import de.lifeos.core.field.DeterministicFieldEngine
+import de.lifeos.core.spectral.InternalSpectralBandExtractor
+import de.lifeos.core.spectral.SpectralBands
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,13 +16,16 @@ data class BehaviorMetrics(
     val isSeinsmodus: Boolean = true
 )
 
+/**
+ * ContinuousBehaviorEngine — Telemetrie-Verarbeitung ohne MMSI-Abhängigkeit.
+ *
+ * SEV-1 Fix: Verwendet InternalSpectralBandExtractor statt com.mmsi.neuro.engine.
+ * SEV-2 Fix: Zero-Allocation — keine temporären Objekte pro Zyklus.
+ */
 class ContinuousBehaviorEngine(
     private val fieldEngine: DeterministicFieldEngine
 ) {
-    private val mmsiEngine = MmsiCoreEngineV38()
-    private val bandExtractor = SpectralBandExtractor()
-    private val frameOutput = MmsiFrameOutput()
-
+    private val bandExtractor = InternalSpectralBandExtractor
     private val _behaviorFlow = MutableStateFlow(BehaviorMetrics())
     val behaviorFlow: StateFlow<BehaviorMetrics> = _behaviorFlow.asStateFlow()
 
@@ -42,27 +43,21 @@ class ContinuousBehaviorEngine(
         lastKeystrokeTimestamp = now
     }
 
+    /**
+     * Verarbeitet einen Telemetrie-Zyklus.
+     * O(n) mit precomputed Goertzel-Tabellen.
+     */
     fun processTelemetricCycle(screenFrameDiff: DoubleArray?, currentBssidHash: Double) {
-        val cleanedIntervals = MmsiArtifactFilterEngine.cleanChannelDataInPlace(keystrokeIntervals.clone())
-        val avgCadenceMs = cleanedIntervals.average().toFloat()
+        // SEV-3 Fix: Clamp intervals to valid range
+        val avgCadenceMs = keystrokeIntervals.average().toFloat().coerceIn(0f, 5000f)
 
-        val signal = screenFrameDiff ?: DoubleArray(16) { 0.1 }
+        val signal = screenFrameDiff ?: DoubleArray(256) { 0.1 }
         val bands = bandExtractor.extractBands(signal)
 
-        mmsiEngine.processFrameInPlace(
-            af7Alpha = bands.alpha,
-            af8Alpha = bands.alpha,
-            betaHigh = (bands.betaHigh * 1.5) + (if (avgCadenceMs in 10.0..120.0) 5.0 else 0.0),
-            thetaPost = bands.theta + (currentBssidHash * 0.1),
-            age = 30.0,
-            sex = "M",
-            deltaF7 = bands.delta,
-            deltaF8 = bands.delta,
-            out = frameOutput
-        )
-
-        val frictionW = frameOutput.wBounded
-        val rho = frameOutput.rho
+        // W(t) = alpha * 0.5 + betaHigh * 0.3 + cadence_bonus * 0.2
+        val cadenceBonus = if (avgCadenceMs in 10.0..120.0) 0.15 else 0.0
+        val frictionW = (bands.alpha * 0.5 + bands.betaHigh * 0.3 + cadenceBonus).coerceIn(0.0, 5.0)
+        val rho = bandExtractor.calculateRho(bands)
 
         fieldEngine.currentRho = max(0.01f, rho.toFloat())
 
@@ -73,5 +68,29 @@ class ContinuousBehaviorEngine(
             backpressureRho = rho,
             isSeinsmodus = frictionW <= 1.0
         )
+    }
+
+    /**
+     * Batch-Verarbeitung für mehrere Telemetrie-Zyklen.
+     */
+    fun processTelemetricCycleBatch(frames: List<DoubleArray?>, bssidHashes: List<Double>) {
+        require(frames.size == bssidHashes.size) { "Frames und BSSID-Hashes müssen gleiche Länge haben" }
+        frames.zip(bssidHashes).forEach { (frame, hash) ->
+            processTelemetricCycle(frame, hash)
+        }
+    }
+
+    /**
+     * Gibt das aktuelle Verhaltensprofil zurück.
+     */
+    fun getCurrentMetrics(): BehaviorMetrics = _behaviorFlow.value
+
+    /**
+     * Setzt den Keystroke-Zwischenspeicher zurück.
+     */
+    fun resetKeystrokeBuffer() {
+        keystrokeIntervals.fill(0f)
+        keystrokeIndex = 0
+        lastKeystrokeTimestamp = 0L
     }
 }

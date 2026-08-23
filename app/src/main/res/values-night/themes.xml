@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Base application theme. -->
-    <style name="Theme.LIFEOS" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_200</item>
-        <item name="colorOnPrimary">@color/black</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+    <style name="Theme.LIFEOS" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">#FF1A2332</item>
+        <item name="android:colorAccent">#FF00E5FF</item>
+        <item name="android:statusBarColor">#FF070B0E</item>
+        <item name="android:navigationBarColor">#FF070B0E</item>
+        <item name="android:windowBackground">#FF070B0E</item>
     </style>
 </resources>

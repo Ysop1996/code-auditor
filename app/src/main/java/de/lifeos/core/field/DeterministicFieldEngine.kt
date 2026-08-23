@@ -1,5 +1,8 @@
 package de.lifeos.core.field
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -10,6 +13,36 @@ class DeterministicFieldEngine(
 ) {
     private val attractorGraph = mutableMapOf<String, AttractorNode>()
     var currentRho: Float = 1.0f
+
+    private val _activeNodes = MutableStateFlow<List<AttractorNode>>(emptyList())
+    val activeNodes: StateFlow<List<AttractorNode>> = _activeNodes.asStateFlow()
+
+    init {
+        registerNode(
+            AttractorNode(
+                id = "SYS_HOMEOSTASE",
+                payload = "System-Homöostase überwachen",
+                position = PhaseVector(FloatArray(dimension) { 0.1f }).normalize(),
+                mass = 1.5f
+            )
+        )
+        registerNode(
+            AttractorNode(
+                id = "SYS_DATEN",
+                payload = "Datenintegrität im Tresor prüfen",
+                position = PhaseVector(FloatArray(dimension) { i -> (i % 5) * 0.1f }).normalize(),
+                mass = 1.2f
+            )
+        )
+        registerNode(
+            AttractorNode(
+                id = "SYS_RECHTSKERNEL",
+                payload = "Rechtskernel-Status aktualisieren",
+                position = PhaseVector(FloatArray(dimension) { i -> (i % 7) * 0.08f }).normalize(),
+                mass = 1.0f
+            )
+        )
+    }
 
     fun executeTrajectory(stimulus: PhaseVector, maxSteps: Int = 16): List<AttractorNode> {
         val trajectory = mutableListOf<AttractorNode>()
@@ -61,5 +94,27 @@ class DeterministicFieldEngine(
 
     fun registerNode(node: AttractorNode) {
         attractorGraph[node.id] = node
+        _activeNodes.value = attractorGraph.values.toList()
+    }
+
+    fun getActiveNodes(): List<AttractorNode> = attractorGraph.values.toList()
+
+    fun getNodeCount(): Int = attractorGraph.size
+
+    /**
+     * Recalculates field topology after hydration.
+     * Re-normalizes attractor positions and updates mass distribution.
+     */
+    fun recalculateFieldTopology(activeNodeCount: Int) {
+        if (activeNodeCount == 0) return
+
+        // Re-normalize all attractor positions to maintain unit sphere
+        attractorGraph.values.forEach { node ->
+            node.position = node.position.normalize()
+        }
+
+        // Update global rho based on field density
+        currentRho = (1.0f / (1.0f + activeNodeCount * 0.01f)).coerceIn(0.1f, 2.0f)
+        _activeNodes.value = attractorGraph.values.toList()
     }
 }

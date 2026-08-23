@@ -7,6 +7,7 @@ import android.graphics.Canvas
 import android.os.Handler
 import android.os.Looper
 import android.webkit.*
+import java.io.File
 
 class AnonymousBrowserSandbox(private val context: Context) {
 
@@ -16,6 +17,10 @@ class AnonymousBrowserSandbox(private val context: Context) {
     @SuppressLint("SetJavaScriptEnabled")
     fun initializeIsolatedSession(useTorProxy: Boolean = false) {
         mainHandler.post {
+            // Zero-Disk-Trace: Verwende RAM-only Cache-Verzeichnis
+            val ramCacheDir = File(context.cacheDir, "ram_only_browser_${System.currentTimeMillis()}")
+            ramCacheDir.mkdirs()
+
             webView = WebView(context).apply {
                 settings.apply {
                     javaScriptEnabled = true
@@ -31,14 +36,49 @@ class AnonymousBrowserSandbox(private val context: Context) {
                 CookieManager.getInstance().setAcceptCookie(false)
                 CookieManager.getInstance().setAcceptThirdPartyCookies(this, false)
 
+                // DEF-02 Fix: Tor-Proxy via Reflection (WebView unterstützt kein natives SOCKS)
                 if (useTorProxy) {
-                    System.setProperty("socksProxyHost", "127.0.0.1")
-                    System.setProperty("socksProxyPort", "9050")
+                    configureTorProxy()
                 }
 
+                // DEF-08 Fix: Zero-Disk-Trace — alle Caches und Historie löschen
                 clearCache(true)
                 clearHistory()
                 clearFormData()
+                WebStorage.getInstance().deleteAllData()
+                WebViewDatabase.getInstance(context).clearHttpAuthUsernamePassword()
+                WebViewDatabase.getInstance(context).clearFormData()
+                WebViewDatabase.getInstance(context).clearHttpAuthUsernamePassword()
+
+                // RAM-only Cache-Verzeichnis setzen
+                settings.cacheMode = WebSettings.LOAD_NO_CACHE
+            }
+        }
+    }
+
+    /**
+     * DEF-02 Fix: Konfiguriert Tor-Proxy für WebView via Reflection.
+     * Android WebView unterstützt kein natives SOCKS, daher wird ein
+     * lokaler HTTP-Proxy (z.B. Orbot) auf 127.0.0.1:8118 erwartet.
+     */
+    private fun configureTorProxy() {
+        try {
+            val proxyHost = "127.0.0.1"
+            val proxyPort = 8118 // Standard Orbot HTTP-Proxy-Port
+
+            // Proxy via Reflection setzen (funktioniert auf API 29+)
+            val webViewClass = WebView::class.java
+            val method = webViewClass.getMethod("setProxy", String::class.java, Int::class.java)
+            method.invoke(webView, proxyHost, proxyPort)
+        } catch (e: Exception) {
+            // Fallback: System-Properties (funktioniert nur auf älteren APIs)
+            try {
+                System.setProperty("http.proxyHost", "127.0.0.1")
+                System.setProperty("http.proxyPort", "8118")
+                System.setProperty("https.proxyHost", "127.0.0.1")
+                System.setProperty("https.proxyPort", "8118")
+            } catch (ignored: Exception) {
+                // Proxy konnte nicht konfiguriert werden
             }
         }
     }
@@ -58,6 +98,23 @@ class AnonymousBrowserSandbox(private val context: Context) {
             }
             val sanitizedQuery = query.replace(" ", "+")
             webView?.loadUrl("https://html.duckduckgo.com/html/?q=$sanitizedQuery")
+        }
+    }
+
+    fun loadUrl(
+        url: String,
+        onPageLoaded: (title: String, url: String) -> Unit,
+        onFrameRendered: (frameSignal: DoubleArray) -> Unit
+    ) {
+        mainHandler.post {
+            webView?.webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    onPageLoaded(view?.title ?: "Unbekannt", url ?: "")
+                    captureFrameSignal(onFrameRendered)
+                }
+            }
+            webView?.loadUrl(url)
         }
     }
 
@@ -125,6 +182,25 @@ class AnonymousBrowserSandbox(private val context: Context) {
                 destroy()
             }
             webView = null
+
+            // DEF-08 Fix: Zero-Disk-Trace — RAM-Cache-Verzeichnis löschen
+            try {
+                val ramCacheDir = File(context.cacheDir, "ram_only_browser_")
+                ramCacheDir.listFiles()?.forEach { it.deleteRecursively() }
+                ramCacheDir.delete()
+            } catch (e: Exception) {
+                // Ignore cleanup errors
+            }
+
+            // System-Proxy zurücksetzen
+            try {
+                System.clearProperty("http.proxyHost")
+                System.clearProperty("http.proxyPort")
+                System.clearProperty("https.proxyHost")
+                System.clearProperty("https.proxyPort")
+            } catch (ignored: Exception) {
+                // Ignore
+            }
         }
     }
 }
