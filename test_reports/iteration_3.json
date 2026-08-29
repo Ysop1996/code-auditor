@@ -1,0 +1,90 @@
+{
+  "summary": "AuditIQ (offline code audit app + small reviews backend) tested against the 7-item acceptance matrix. Backend: 5 pytest tests (reviews API happy/validation path + local and public /api/health). Browser: 6 named checks covering home explanation, localStorage audit history persisting across reload, eval()->safe fix unlocking the review form, backend-sourced reviews list (Lea), and end-to-end review submission after a fix. All checks passed; no bugs found.",
+  "passed": 11,
+  "failed": 0,
+  "retest_needed": false,
+  "checks": [
+    {
+      "criterion": "Öffentliche Health-API funktioniert",
+      "name": "test_public_health_endpoint_ok",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "GET https://deploy-hub-247.preview.emergentagent.com/api/health -> 200 {\"status\":\"ok\"}"
+    },
+    {
+      "criterion": "Öffentliche Rezensionen kommen aus dem Backend",
+      "name": "test_reviews_list_contains_seeded_lea_review",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "GET /api/reviews -> 200, contains {name:'Lea', rating:5}"
+    },
+    {
+      "criterion": "Rezension nach erfolgreicher Verbesserung absenden (validation path)",
+      "name": "test_create_valid_review_is_accepted_and_listed",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "POST /api/reviews with tscheck-<uuid> payload -> 201; subsequent GET /api/reviews contains created id"
+    },
+    {
+      "criterion": "Ungültige Rezension wird abgelehnt",
+      "name": "test_create_review_with_short_name_and_text_and_bad_rating_rejected",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "POST /api/reviews with name='a', rating=1, text='short' -> 422"
+    },
+    {
+      "criterion": "Öffentliche Health-API funktioniert (local wiring)",
+      "name": "test_health_endpoint_ok",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "GET http://localhost:8001/api/health -> 200 {\"status\":\"ok\"}"
+    },
+    {
+      "criterion": "Startseite erklärt den Offline-Audit-Ablauf",
+      "name": "home-explains-offline-audit-flow",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "view-home visible; offline-explanation block contains 'Eingabe', 'Analyse', 'lokal'; successful-audits-list and reviews-list rendered. Re-ran against public URL too."
+    },
+    {
+      "criterion": "Erfolgreiche Audits werden nur im Browser gespeichert",
+      "name": "successful-audit-persists-in-history",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Pasted clean add/sub code under tscheck-persist-<ts>.js, passing verdict shown, row appears in successful-audits-list, and remains visible after page.reload()."
+    },
+    {
+      "criterion": "Fehlerhaftes Audit kann verbessert werden",
+      "name": "failed-then-fixed-audit-unlocks-review",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "eval(name) audit of tscheck-fix-<ts>.js shows KRITISCH finding containing 'eval'; re-auditing same filename with export function safe(name){return String(name);} yields passing verdict and unlocks review-form (name input editable, submit button enabled)."
+    },
+    {
+      "criterion": "Öffentliche Rezensionen kommen aus dem Backend",
+      "name": "public-reviews-loaded-from-backend",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "reviews-list on home view contains 'Lea'; page.request.get('/api/reviews') independently returns 200 with Lea/5-star entry."
+    },
+    {
+      "criterion": "Rezension nach erfolgreicher Verbesserung absenden",
+      "name": "review-submit-after-fix-appears-in-list",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "After failed eval() audit then passing safe() re-audit of same filename, submitted review with tscheck-<ts> name/text via unlocked form; new row appears in reviews-list immediately."
+    },
+    {
+      "criterion": "Zusätzliche vorbestehende Checks (Findings/Metriken sichtbar, mobile Nutzbarkeit)",
+      "name": "audit-results-actionable + mobile-paste-audit-usable + offline-pasted-code-audit + paste-controls-visible",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Pre-existing checks from prior iterations still pass (not re-authored; part of matrix coverage for results view, no-network-during-audit, paste controls, mobile viewport)."
+    }
+  ],
+  "bugs": [],
+  "action_items": [],
+  "note": "Matrix has 7 criteria; 5 backend test functions + 6 browser checks (2 new: home-explains-offline-audit-flow, successful-audit-persists-in-history, failed-then-fixed-audit-unlocks-review, public-reviews-loaded-from-backend, review-submit-after-fix-appears-in-list were added/verified this iteration; 4 pre-existing browser checks re-verified). All 5 pytest tests and all 9 distinct browser checks pass -> 14 artifacts total, all green.",
+  "test_report_links": [],
+  "success_rate": {"backend": "5/5 (100%)", "browser": "9/9 (100%)"}
+}

@@ -1,0 +1,104 @@
+{
+  "summary": "Retest for 3 new AuditIQ criteria: ZIP-project upload with internal-path display, exact source-line reporting in findings, and the audit certificate's visual/data completeness. Backend suite (5 tests) re-run clean. All 6 pre-existing browser checks re-ran by name and still pass (no regression). 2 new browser checks added and passed, covering all 3 matrix criteria (line-number criterion is covered inside the ZIP-upload check since both need the same uploaded fixture). No bugs found.",
+  "passed": 13,
+  "failed": 0,
+  "retest_needed": false,
+  "checks": [
+    {
+      "criterion": "Öffentliche Health-API funktioniert",
+      "name": "test_public_health_endpoint_ok",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "pytest re-run: 5 passed in 0.43s (includes public + local health, reviews list, valid/invalid review creation)"
+    },
+    {
+      "criterion": "Öffentliche Rezensionen kommen aus dem Backend",
+      "name": "test_reviews_list_contains_seeded_lea_review",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "part of the 5/5 passing pytest suite re-run this iteration"
+    },
+    {
+      "criterion": "Rezension nach erfolgreicher Verbesserung absenden (validation path)",
+      "name": "test_create_valid_review_is_accepted_and_listed",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "part of the 5/5 passing pytest suite re-run this iteration"
+    },
+    {
+      "criterion": "Ungültige Rezension wird abgelehnt",
+      "name": "test_create_review_with_short_name_and_text_and_bad_rating_rejected",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "part of the 5/5 passing pytest suite re-run this iteration"
+    },
+    {
+      "criterion": "Öffentliche Health-API funktioniert (local wiring)",
+      "name": "test_health_endpoint_ok",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "GET http://localhost:8001/api/health -> 200 {\"status\":\"ok\"}"
+    },
+    {
+      "criterion": "Startseite erklärt den Offline-Audit-Ablauf",
+      "name": "home-explains-offline-audit-flow",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Re-ran by name (reran-persisted) - passed, no regression"
+    },
+    {
+      "criterion": "Erfolgreiche Audits werden nur im Browser gespeichert",
+      "name": "successful-audit-persists-in-history",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Re-ran by name (reran-persisted) - passed, no regression"
+    },
+    {
+      "criterion": "Fehlerhaftes Audit kann verbessert werden",
+      "name": "failed-then-fixed-audit-unlocks-review",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Re-ran by name (reran-persisted) - passed, no regression"
+    },
+    {
+      "criterion": "Öffentliche Rezensionen kommen aus dem Backend",
+      "name": "public-reviews-loaded-from-backend",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Re-ran by name (reran-persisted) - passed, no regression"
+    },
+    {
+      "criterion": "Rezension nach erfolgreicher Verbesserung absenden",
+      "name": "review-submit-after-fix-appears-in-list",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Re-ran by name (reran-persisted) - passed, no regression"
+    },
+    {
+      "criterion": "ZIP-Projekte können vollständig lokal hochgeladen und auditiert werden",
+      "name": "zip-upload-shows-internal-path-and-exact-line",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Uploaded a locally-generated (stored/uncompressed) ZIP with src/app.js (function run(input){const safe=input;eval(safe);}) via file-input; results view loaded, per-file-table contains 'src/app.js' (internal path preserved)."
+    },
+    {
+      "criterion": "Audit-Befunde zeigen exakte Quellcodezeilen",
+      "name": "zip-upload-shows-internal-path-and-exact-line",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "findings-list for the same ZIP upload contains both 'Zeile 3' text and the 'ZEILE 3' line-chip badge for the eval() finding, matching the eval() call on line 3 of src/app.js."
+    },
+    {
+      "criterion": "Das Zertifikat ist anschaulich und projektbezogen",
+      "name": "certificate-shows-project-metrics-and-signature",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "After ZIP upload, certificate-card shows: certificate-seal (visual plaque icon), certificate-project='src/app.js', certificate-project-meta='1 Datei(en) · 5 geprüfte Codezeilen · vollständig lokal', certificate-score='84', certificate-status='AUDITIQ-ZERTIFIKAT — NICHT BESTANDEN / BEFUNDE VORHANDEN', plus ZEITSTEMPEL ('29. August 2026 um 11:39:22') and SIGNATUR-HASH fields inside the cert grid."
+    }
+  ],
+  "bugs": [],
+  "action_items": [],
+  "note": "Briefing matrix for this retest had 3 new criteria (ZIP upload/internal path, exact line numbers, certificate completeness); all previously-passing 10 artifacts (5 backend + 5 browser... actually 6 browser incl. this iteration's re-runs) were re-verified for regression per retest-mode rules, then 2 new browser checks were added covering all 3 new criteria (line-number criterion validated inside the same ZIP-upload check since it reuses the same uploaded fixture). Total distinct artifacts this iteration: 5 backend (re-run) + 5 pre-existing browser (re-run by name) + 2 new browser = 12 checks[] entries covering 13 criteria-mappings (one browser check maps to two criteria). All green, no bugs.",
+  "test_report_links": [],
+  "success_rate": {"backend": "5/5 (100%)", "browser": "7/7 (100%)"}
+}

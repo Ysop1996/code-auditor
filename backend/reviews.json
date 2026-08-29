@@ -1,0 +1,44 @@
+[
+  {
+    "id": "b070107558214ac391e5a73fdc59369a",
+    "name": "tscheck-1788003441614",
+    "rating": 5,
+    "text": "tscheck 1788003441614 Nach der Verbesserung war der Code endlich sauber und sicher.",
+    "createdAt": "2026-08-29T11:37:24.875048+00:00"
+  },
+  {
+    "id": "feeb6fee79ee4eeaa0110c863c04fc7b",
+    "name": "tscheck-010b3a00",
+    "rating": 5,
+    "text": "tscheck-010b3a00 Dies ist eine gueltige Testrezension mit genug Text.",
+    "createdAt": "2026-08-29T11:37:06.270166+00:00"
+  },
+  {
+    "id": "baac4c7dcc4148c892264540769a5c40",
+    "name": "tscheck-2f57ada2",
+    "rating": 5,
+    "text": "tscheck-2f57ada2 Dies ist eine gueltige Testrezension mit genug Text.",
+    "createdAt": "2026-08-29T11:32:52.765858+00:00"
+  },
+  {
+    "id": "4bf2f32b373b41f68a5f99b730bb804f",
+    "name": "tscheck-1788003150232",
+    "rating": 5,
+    "text": "tscheck 1788003150232 Nach der Verbesserung war der Code endlich sauber und sicher.",
+    "createdAt": "2026-08-29T11:32:33.436770+00:00"
+  },
+  {
+    "id": "317a982d8aff4fd1b5e5321952a3dd3e",
+    "name": "tscheck-ae07f9ec",
+    "rating": 5,
+    "text": "tscheck-ae07f9ec Dies ist eine gueltige Testrezension mit genug Text.",
+    "createdAt": "2026-08-29T11:31:29.031800+00:00"
+  },
+  {
+    "id": "fe5c6a27e4b24b0fb36964b889f4a17c",
+    "name": "Lea",
+    "rating": 5,
+    "text": "Die lokalen Hinweise haben mir geholfen, die kritische Stelle sicher zu ersetzen.",
+    "createdAt": "2026-08-29T11:30:25.135931+00:00"
+  }
+]

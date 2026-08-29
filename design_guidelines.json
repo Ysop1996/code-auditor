@@ -1,110 +1,117 @@
 {
-  "project_context": {
-    "app_type": "Single HTML SPA (Vanilla JS + inline CSS)",
-    "constraint": "Zero-Egress. No external CDNs, no external fonts, no external images. No frameworks (No React/Tailwind).",
-    "theme": "dark"
-  },
-  "design_direction": {
-    "archetype": "Swiss & High-Contrast / Enterprise Security Console",
-    "emotion": "Authoritative, precise, mathematical, unyielding",
-    "visual_mood": "High contrast, structural grayscale, terminal-like precision"
+  "theme": "dark",
+  "archetype": "ARCHETYPE 4: SWISS & HIGH-CONTRAST (Authority, Clarity, Truth) mixed with Retro-Futurism / Technical",
+  "app_type": "saas_app / developer_tool",
+  "typography": {
+    "headings": {
+      "family": "Cabinet Grotesk, sans-serif",
+      "weights": ["300", "700", "900"],
+      "styling": "tracking-tight, high contrast white, never centered unless in an empty state."
+    },
+    "body": {
+      "family": "IBM Plex Sans, sans-serif",
+      "weights": ["400", "500"],
+      "styling": "tracking-normal, text-zinc-300 left-aligned."
+    },
+    "mono": {
+      "family": "JetBrains Mono, monospace",
+      "weights": ["400", "600"],
+      "styling": "Used exclusively for code input, line numbers, and data metrics (like the audit score)."
+    },
+    "rules": [
+      "H1 up to text-5xl tracking-tighter, never larger.",
+      "Overlines MUST be uppercase, text-xs, tracking-[0.2em].",
+      "Line numbers in editor MUST be muted text-zinc-600.",
+      "Do NOT use Inter for headings."
+    ]
   },
   "colors": {
-    "css_variables": {
-      "--bg-base": "#000000",
-      "--bg-surface": "#09090B",
-      "--bg-surface-hover": "#18181B",
-      "--border-subtle": "#27272A",
-      "--border-strong": "#52525B",
-      "--text-primary": "#FAFAFA",
-      "--text-muted": "#A1A1AA",
-      "--accent-primary": "#FFFFFF",
-      "--accent-primary-fg": "#000000",
-      "--status-success": "#10B981",
-      "--status-warning": "#F59E0B",
-      "--status-critical": "#EF4444"
+    "background": {
+      "primary": "#09090B",
+      "secondary": "#18181B",
+      "tertiary": "#27272A"
+    },
+    "text": {
+      "primary": "#FAFAFA",
+      "secondary": "#A1A1AA",
+      "muted": "#52525B"
+    },
+    "accent": {
+      "primary": "#FAFAFA",
+      "primary_foreground": "#09090B",
+      "critical": "#EF4444",
+      "warning": "#F59E0B",
+      "info": "#3B82F6",
+      "surface_border": "rgba(255,255,255,0.1)"
     },
     "rules": [
-      "Never use pure black for cards, only for the deepest background.",
-      "Use #27272A for all grid borders to create a technical wireframe look.",
-      "Do not use any gradients. Only solid, flat colors."
+      "Never use pure black (#000000) or pure grey. Always slightly tinted with zinc/slate from Tailwind.",
+      "Gradients only on specific hover states or glowing borders. The tool should feel structural and precise.",
+      "High contrast for all text (minimum 4.5:1 ratio).",
+      "Action buttons (like 'Run Audit') should use primary accent (White bg, Black text) for high visibility."
     ]
   },
-  "typography": {
-    "font_stacks": {
-      "heading": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      "body": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      "mono": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
-    },
-    "rules": [
-      "Self-hosted / system fonts only.",
-      "Headlines > 24px MUST use letter-spacing: -0.02em.",
-      "Overlines/Labels (like 'PROJEKT DATEIEN') MUST be uppercase, 11px, letter-spacing: 0.1em.",
-      "Metrics and hex hashes MUST use the mono font."
-    ]
-  },
-  "layouts": {
-    "landing_page": [
-      "Remove generic centering. Align the hero text to the left.",
-      "Use a strict 2-column or 3-column CSS Grid for the 'Why Better' section with sharp 1px borders.",
-      "The login form should look like a highly secure, minimalist terminal block."
-    ],
-    "hud_dashboard": [
-      "Use a dense CSS grid (Bento style). Left panel: 280px, Center: 1fr, Right: 350px.",
-      "Remove all gaps and use border-collapse style layouts: panels touch each other separated only by 1px borders."
-    ]
+  "visual_enhancers": {
+    "surfaces": "Grid Borders (The Technical Look). Exposed skeleton, border-collapse styles. Panels and cards use flat backgrounds, 1px subtle borders (border-zinc-800), no shadows.",
+    "effects": "Subtle noise/grain texture overlaid on the main background (`mix-blend-overlay`, opacity 0.03) to break the digital flatness.",
+    "glassmorphism": "Used only for floating sticky header: `backdrop-blur-xl bg-zinc-950/60` with 1px `border-white/10` bottom border. Never fully transparent."
   },
   "components": {
-    "buttons": {
-      "style": "Sharp rectangular (border-radius: 0 or 2px).",
-      "primary": "Background #FFFFFF, Text #000000. Hover: opacity 0.9.",
-      "secondary": "Background transparent, Border #27272A, Text #FAFAFA. Hover: Border #FFFFFF."
-    },
-    "cards_and_panels": {
-      "style": "Flat solid surfaces (#09090B). No glassmorphism. No soft drop shadows.",
-      "borders": "1px solid #27272A."
-    },
-    "file_tree": {
-      "style": "Tight vertical spacing. Hover state changes background to #18181B. Active state has a 2px left border of #FFFFFF."
-    },
-    "findings_list": {
-      "style": "Look like terminal output logs. Left border indicator for severity. Background slightly tinted with the severity color at 5% opacity."
-    }
+    "Header": "Sticky, glassmorphism, brand logo on left, 'Run Audit' primary CTA on right.",
+    "Editor_Panel": "Left panel on desktop. Dark background (#18181B). Features a monospace textarea or code editor wrapper. Provide a clear 'Paste your code here...' placeholder.",
+    "Audit_Results_Panel": "Right panel. Empty state shows an icon and 'Awaiting code input...'. Active state shows Overall Score (large JetBrains Mono text) and a list of categorized findings.",
+    "Findings_Card": "Sharp edges (`rounded-none` or `rounded-sm`). Left border colored by severity (Red for Critical, Yellow for Warning). Contains line number reference, category, and explanation.",
+    "CTA_Buttons": "Sharp rectangular (`rounded-md`) with 1px border. Hover state triggers a subtle internal glow or background color shift. Primary CTA is High Contrast."
   },
-  "media_and_icons": {
-    "rules": [
-      "CRITICAL: Remove all emojis from HTML. They look unprofessional.",
-      "Replace emojis (⚡, 🔒, 🎯, 📊, 🏆, 🌐, 📁, 📄, 🎨, {}) with pure inline <svg> elements.",
-      "SVGs should use stroke='currentColor', stroke-width='1.5', fill='none', stroke-linecap='round', stroke-linejoin='round'."
-    ]
+  "grids_layouts": {
+    "page_structure": "Full-height app layout (`h-screen`). Avoid scrolling the entire page; instead, independently scroll the Editor Panel and the Results Panel using `overflow-y-auto`.",
+    "desktop": "Grid layout: `grid grid-cols-1 lg:grid-cols-2 gap-px bg-zinc-800` (creates a 1px border between the two panels). Left: Editor, Right: Results.",
+    "mobile": "Grid layout: `grid grid-cols-1`. Stacked layout. Results appear below the editor.",
+    "spacing": "Generous padding inside panels (`p-6` to `p-12`). Utilize the Bento grid protocol for any summary widgets in the Results Panel."
   },
   "motion": {
     "rules": [
-      "Fast, utilitarian micro-interactions (0.15s ease).",
-      "No bouncy spring animations.",
-      "The 3D Phase Space canvas should be updated to use the new color palette (Emerald, Amber, Red) against the dark background."
+      "Micro-animations on all interactive elements (hover states, focus rings).",
+      "Staggered entrance animations for the audit findings list (e.g., using Framer Motion or clean CSS transitions).",
+      "Do NOT use `transition: all`.",
+      "Use specific transitions like `transition: transform 0.2s ease, opacity 0.2s ease`."
     ]
   },
   "accessibility": {
     "rules": [
-      "All interactive elements MUST have a data-testid attribute.",
-      "Ensure contrast ratios exceed 4.5:1."
+      "Add `data-testid` on all buttons, inputs, tabs, and results cards for testing.",
+      "Respect `prefers-reduced-motion`.",
+      "Focus states MUST be high contrast ring (e.g., `focus:ring-2 focus:ring-white focus:outline-none`).",
+      "Color-blind friendly severity indicators: Always combine color with explicit text labels (e.g., 'CRITICAL') and icons."
     ]
   },
+  "media": {
+    "image_urls": {
+      "hero_background": {
+        "url": "https://images.unsplash.com/photo-1638864616275-9f0b291a2eb6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzOTB8MHwxfHNlYXJjaHwzfHxkYXJrJTIwYWJzdHJhY3QlMjBnZW9tZXRyaWMlMjB0ZXh0dXJlfGVufDB8fHx8MTc4Nzg3NDE3OHww&ixlib=rb-4.1.0&q=85",
+        "category": "background",
+        "description": "Abstract geometric texture to be used with mix-blend-overlay and very low opacity (e.g., 5%) on the main app wrapper to kill digital flatness."
+      }
+    },
+    "icons": "Use `lucide-react`. Provide sharp, technical icons (e.g., Terminal, Shield, AlertTriangle, CheckCircle)."
+  },
   "instructions_to_main_agent": [
-    "Your objective is to drastically improve the frontend professionalism of /app/src/assets/index.html and /app/src/assets/code_auditor.html.",
-    "Both files currently have identical content; apply the redesign to BOTH files.",
-    "You MUST use Vanilla JS and inline CSS ONLY. Do not install Tailwind, React, or any other framework.",
-    "Apply the CSS variables defined in this guideline.",
-    "Refactor the DOM structure where necessary to achieve the 'Swiss Brutalist' layout.",
-    "Replace EVERY emoji with an inline SVG string.",
-    "Ensure all existing JS logic (Phase Space animation, File analysis, Authentication) remains intact and functional.",
-    "Start the app using `python3 -m http.server 8000 --directory /app/src/assets &` and test the auditor using `curl` or by writing a basic test script or using browser tools to fulfill the 'auditor testen' requirement."
+    "Build a 2-panel split layout using Tailwind CSS. Left side for Code Input, Right side for Audit Results.",
+    "Ensure layout takes up `h-screen` and prevents body scrolling. Both panels should scroll independently.",
+    "Implement the offline audit logic completely in the frontend. Create a simple JavaScript/TypeScript regex-based function to simulate detecting vulnerabilities (e.g., detecting 'eval', 'console.log', 'var', 'localStorage').",
+    "Do not use Shadcn 'Card' if it forces heavy shadows; override default classes to be flat, 1px bordered with technical aesthetic.",
+    "Ensure the right panel has an 'Overall Score' widget (large typography) and a findings list. Group findings by Severity (Critical, Warning, Info).",
+    "Add 'Copy Results' and 'Clear' buttons in the Results panel or header.",
+    "Left-align text in the editor and results. Never center-align dense data.",
+    "Include `data-testid` attributes on interactive elements."
   ],
-  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
-    "Avoid the 'AI slop' aesthetic. Create depth through sharp contrast and strict grids, not muddy gradients.",
-    "Do not center-align the app container.",
-    "NEVER use AI assistant Emoji characters. Use standard SVGs.",
-    "All interactive elements must include a data-testid attribute."
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Do not converge toward generic outputs. Apply the defined typography strictly (Cabinet Grotesk for headings, IBM Plex Sans for body, JetBrains Mono for code).",
+    "Create depth through 1px borders and selective background lightenings, not heavy drop shadows (since this is dark mode).",
+    "Do not apply `transition: all`. Use specific CSS transitions.",
+    "Never use placeholder text or placeholder image URLs.",
+    "All interactions need micro-animations (hover, active, focus states).",
+    "Use generous spacing (`p-6` to `p-12`) inside panels.",
+    "Do NOT center align the app container, i.e. do not add `.App { text-align: center; }`. Disrupts reading flow."
   ]
 }
