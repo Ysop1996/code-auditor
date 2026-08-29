@@ -1,0 +1,62 @@
+{
+  "summary": "Retest of backend identity-comparison fix and frontend server.js refactor (named handlers + constants). All 5 acceptance criteria verified healthy: no bug is/is not misuse remains (only intentional mongo_client is not None), handleRequest decomposed into resolveStaticFile/serveStaticFile with complexity 4 (<=10), semantic constants confirmed in server.js, routing behavior (200/200/405/404/403) preserved, and production build + public health/browser regression checks pass.",
+  "passed": 7,
+  "failed": 0,
+  "retest_needed": false,
+  "checks": [
+    {
+      "criterion": "Backend identity comparisons use correct semantics",
+      "name": "backend-identity-comparison-grep",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "grep -rn ' is | is not ' backend/*.py (excluding pycache) -> no bare literal identity comparisons found; only occurrence of 'is not None' is db.py:146 'if app.state.mongo_client is not None:' preceded by comment confirming intentional None-singleton check."
+    },
+    {
+      "criterion": "Frontend request handler complexity is below the reported threshold",
+      "name": "server-js-handler-decomposition-review",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "frontend/server.js: http.createServer(handleRequest) at line 61; handleRequest (lines 54-59, 4 branches: API prefix check, method check, delegates to serveStaticFile) calls resolveStaticFile (37-43) and serveStaticFile (45-52) as separate named functions. Direct complexity estimate for handleRequest is 4, within the <=10 threshold."
+    },
+    {
+      "criterion": "Frontend server uses semantic constants",
+      "name": "server-js-constants-review",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "frontend/server.js lines 5-16 define DEFAULT_FRONTEND_PORT, BACKEND_PORT, STATUS_OK/STATUS_BAD_GATEWAY/STATUS_METHOD_NOT_ALLOWED/STATUS_FORBIDDEN/STATUS_NOT_FOUND, LOOPBACK_HOST, LISTEN_HOST, METHOD_GET, API_PREFIX as named constants; used throughout instead of inline literals."
+    },
+    {
+      "criterion": "Refactored server preserves all routing behavior",
+      "name": "server-js-routing-curl",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "curl http://localhost:3000/ -> 200; curl http://localhost:3000/vendor/qrcode.js -> 200; curl -X PUT http://localhost:3000/ -> 405; curl http://localhost:3000/nonexistent-file.txt -> 404; curl 'http://localhost:3000/..%2f..%2fbackend/.env' -> 403 (traversal rejected); curl http://localhost:8001/api/health (proxied via :3000 in backend-pytest-suite) -> 200."
+    },
+    {
+      "criterion": "Production build and public app have no regression",
+      "name": "yarn-build-and-regression-checks",
+      "lane": "backend+browser",
+      "status": "passed",
+      "evidence": "cd frontend && yarn build -> 'Done in 0.07s.' exit 0. Backend pytest: 5 passed in 0.70s. Browser check 'home-explains-offline-audit-flow' reran-persisted -> PASSED. Browser check 'public-reviews-loaded-from-backend' reran-persisted -> PASSED, screenshot captured, no thrown errors."
+    },
+    {
+      "criterion": "Production build and public app have no regression (backend pytest suite)",
+      "name": "backend-pytest-suite",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "cd /app/backend && python -m pytest -q -p no:cacheprovider -> '5 passed in 0.70s' (test_tscheck_public_health.py, test_tscheck_reviews_api.py)."
+    },
+    {
+      "criterion": "Production build and public app have no regression (public health)",
+      "name": "public-health-curl",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "curl http://localhost:8001/api/health -> 200; matches acceptance criterion for Systemstatus Backend Online (confirmed visually in prior home-explains-offline-audit-flow screenshot)."
+    }
+  ],
+  "bugs": [],
+  "action_items": [],
+  "note": "Retest mode: no new UI surface since iteration_8; matrix in this briefing is about a backend db.py identity-comparison audit and a frontend server.js complexity refactor, both static/source-level criteria verified by direct code review + grep plus live curl routing checks. Re-ran the 2 existing browser checks by name only (no script resend) as the general no-regression smoke test, and re-ran the backend pytest suite. All 5 briefing criteria confirmed satisfied with no findings.",
+  "test_report_links": ["/app/test_reports/iteration_8.json"],
+  "success_rate": {"backend": "5/5 backend-lane checks (100%)", "browser": "2/2 browser-lane checks (100%)"}
+}
