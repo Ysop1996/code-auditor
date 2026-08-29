@@ -276,6 +276,24 @@
     .cert.fail .cert-score strong { color: #ff6a5c; }
     .cert-score span { font: 10px var(--mono); color: #9a9a8e; letter-spacing: .12em; }
     @media (max-width: 620px) { .cert-hero { grid-template-columns: auto 1fr; } .cert-score { grid-column: 1 / -1; border-left: 0; border-top: 1px solid rgba(255,255,255,.14); padding: 18px 0 0; text-align: left; } }
+    .comparison { background: var(--paper); border: 1px solid var(--line); padding: 22px; }
+    .comparison-head { display: flex; justify-content: space-between; gap: 18px; align-items: start; }
+    .comparison-head h3 { font-size: 18px; }
+    .comparison-head p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .comparison-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 18px; }
+    .compare-column { background: var(--bg); border: 1px solid var(--line); padding: 15px; min-height: 120px; }
+    .compare-label { font: 700 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .compare-label.fixed { color: var(--accent); } .compare-label.new { color: var(--critical); } .compare-label.open { color: var(--medium); }
+    .compare-count { font: 700 28px var(--mono); margin: 5px 0 10px; }
+    .compare-item { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding: 7px 0; }
+    .compare-empty { font-size: 13px; color: var(--muted); padding-top: 14px; }
+    .file-tools { display: grid; grid-template-columns: 1fr 180px 180px auto; gap: 10px; margin-bottom: 12px; }
+    .file-path-folder { color: var(--faint); }
+    .file-path-name { color: var(--ink); font-weight: 700; }
+    .filter-count { align-self: center; font: 11px var(--mono); color: var(--muted); white-space: nowrap; }
+    .share-note { margin-top: 12px; color: var(--muted); font-size: 12px; }
+    .shared-wrap { max-width: 840px; margin: 0 auto; padding: 70px 28px; }
+    @media (max-width: 720px) { .comparison-grid { grid-template-columns: 1fr; } .file-tools { grid-template-columns: 1fr; } }
 
     .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
 
@@ -471,7 +489,19 @@
             <div class="section-head"><h2>Empfehlungen</h2><span class="count" id="recsCount"></span></div>
             <div id="recsList" data-testid="recommendations-list"></div>
 
-            <div class="section-head"><h2>Datei-Übersicht</h2></div>
+            <div class="section-head"><h2>Vergleich zum letzten Audit</h2></div>
+            <div class="comparison" id="comparisonCard" data-testid="audit-comparison">
+                <div class="comparison-head"><div><h3 id="comparisonTitle">Noch kein Vergleich verfügbar</h3><p id="comparisonSubtitle">Auditieren Sie dasselbe Projekt erneut, um Veränderungen zu sehen.</p></div></div>
+                <div id="comparisonContent"></div>
+            </div>
+
+            <div class="section-head"><h2>Dateibaum</h2><span class="count" id="fileFilterCount"></span></div>
+            <div class="file-tools" data-testid="file-tree-filters">
+                <input class="field-input" id="fileSearch" data-testid="file-search-input" placeholder="Pfad oder Datei suchen…" autocomplete="off">
+                <select class="field-select" id="languageFilter" data-testid="language-filter"><option value="all">Alle Sprachen</option></select>
+                <select class="field-select" id="severityFilter" data-testid="severity-filter"><option value="all">Alle Status</option><option value="critical">Mit Befunden</option><option value="warning">Warnung</option><option value="clean">Sauber</option></select>
+                <span class="filter-count" id="visibleFileCount">0 Dateien</span>
+            </div>
             <table class="per-file" data-testid="per-file-table">
                 <thead><tr><th>Datei</th><th>Sprache</th><th>Zeilen</th><th>Kritisch</th><th>W(t)</th><th>Status</th></tr></thead>
                 <tbody id="perFileBody"></tbody>
@@ -507,7 +537,23 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 8.5C8 19.5 5 16.5 5 12V6z"/><path d="M9 12l2 2 4-4"/></svg>
                     Zertifikat als PDF
                 </button>
+                <button class="btn btn-ghost" id="shareCertBtn" type="button" data-testid="share-certificate-button">Zertifikatslink kopieren</button>
             </div>
+            <div class="share-note">Der Link enthält ausschließlich Status, Score, Dateianzahl, Zeilenzahl und Signatur — niemals Quellcode oder Dateinamen.</div>
+        </div>
+    </section>
+
+    <section id="view-shared" class="view" data-testid="shared-certificate-view">
+        <div class="shared-wrap">
+            <div class="eyebrow">GETEILTE PRÜFBESTÄTIGUNG</div>
+            <h1>AuditIQ Zertifikat</h1>
+            <p class="lead" style="margin:0 0 28px">Diese Ansicht enthält keine Quelltexte oder Dateinamen.</p>
+            <div class="cert" id="sharedCertCard" data-testid="shared-certificate-card">
+                <div class="cert-brand"><span class="cert-logo-chip"><img src="auditiq-logo.png" alt="AuditIQ Logo"></span><div><div class="cert-brand-name">AuditIQ</div><div class="cert-brand-sub">PRIVACY-SAFE VERIFICATION</div></div></div>
+                <div class="cert-hero"><div class="cert-seal" id="sharedCertSeal"></div><div><div class="cert-project-label">Anonymisiertes Projekt</div><div class="cert-project">Geteiltes Code-Audit</div><div class="cert-project-meta" id="sharedCertMeta"></div></div><div class="cert-score"><strong id="sharedCertScore"></strong><span>AUDIT SCORE / 100</span></div></div>
+                <div class="cert-top" id="sharedCertStatus"></div><div class="cert-grid" id="sharedCertGrid"></div>
+            </div>
+            <div class="actions"><button class="btn" id="sharedHomeBtn" type="button" data-testid="shared-home-button">AuditIQ öffnen</button></div>
         </div>
     </section>
 
@@ -706,6 +752,43 @@
         try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch (_) { return []; }
     }
 
+    function projectKey(files) {
+        return files.map(file => file.filename).sort().join(', ');
+    }
+
+    function findingSummary(result) {
+        const summary = {};
+        for (const file of result.fileMetrics) {
+            for (const pattern of PATTERNS) {
+                const count = file.security[pattern.key] || 0;
+                if (count) summary[`${file.filename}|${pattern.key}`] = { file: file.filename, title: pattern.label, severity: pattern.sev, count };
+            }
+        }
+        return summary;
+    }
+
+    function renderComparison(result, files) {
+        const project = projectKey(files);
+        const previous = [...readLocal(AUDIT_ATTEMPTS_KEY)].reverse().find(item => item.project === project && item.findings);
+        if (!previous) {
+            $('comparisonTitle').textContent = 'Erstes Audit dieses Projekts';
+            $('comparisonSubtitle').textContent = 'Beim nächsten Audit werden behobene, neue und verbleibende Befunde verglichen.';
+            $('comparisonContent').innerHTML = '<div class="compare-empty">Noch keine frühere Version mit diesem Dateibaum gespeichert.</div>';
+            return;
+        }
+        const current = findingSummary(result);
+        const previousFindings = previous.findings || {};
+        const fixed = [], added = [], open = [];
+        for (const [key, finding] of Object.entries(previousFindings)) {
+            if (!current[key]) fixed.push(finding); else open.push(current[key]);
+        }
+        for (const [key, finding] of Object.entries(current)) if (!previousFindings[key]) added.push(finding);
+        $('comparisonTitle').textContent = result.isZeroDefect ? 'Verbesserung erfolgreich' : 'Änderungen erkannt';
+        $('comparisonSubtitle').textContent = `Verglichen mit dem Audit vom ${new Date(previous.at).toLocaleString('de-DE')}`;
+        const column = (kind, label, items) => `<div class="compare-column"><div class="compare-label ${kind}">${label}</div><div class="compare-count" data-testid="comparison-${kind}-count">${items.length}</div>${items.length ? items.slice(0, 5).map(item => `<div class="compare-item">${escapeHtml(item.title)} · ${escapeHtml(item.file)}</div>`).join('') : '<div class="compare-item">Keine</div>'}</div>`;
+        $('comparisonContent').innerHTML = `<div class="comparison-grid">${column('fixed', 'Behoben', fixed)}${column('new', 'Neu', added)}${column('open', 'Offen', open)}</div>`;
+    }
+
     function renderHistory() {
         const history = readLocal(AUDIT_HISTORY_KEY);
         $('successfulAuditCount').textContent = String(history.length);
@@ -740,10 +823,10 @@
 
     function storeAuditOutcome(r, files) {
         const attempts = readLocal(AUDIT_ATTEMPTS_KEY);
-        const project = files.map(f => f.filename).sort().join(', ');
+        const project = projectKey(files);
         const passed = r.isZeroDefect && r.totalCritical === 0;
         const previousFailed = attempts.some(a => a.project === project && !a.passed);
-        attempts.push({ project, passed, at: new Date().toISOString() });
+        attempts.push({ project, passed, at: new Date().toISOString(), findings: findingSummary(r), lines: r.fileMetrics.reduce((sum, file) => sum + file.totalLines, 0), score: Math.max(0, Math.round(100 - Math.min(100, r.totalCritical * 12 + r.loadY * 8))) });
         localStorage.setItem(AUDIT_ATTEMPTS_KEY, JSON.stringify(attempts.slice(-50)));
         if (!passed) return;
         if (previousFailed) {
@@ -969,6 +1052,7 @@
     // ---- Results rendering ----
     function renderResults(r) {
         const pass = r.isZeroDefect && r.totalCritical === 0;
+        if (window.__lastFiles) renderComparison(r, window.__lastFiles);
 
         // Verdict
         const v = $('verdict');
@@ -1035,16 +1119,13 @@
             </div>`).join('')
             : `<div class="empty">${ICON_CHECK}<span>Keine Maßnahmen erforderlich. Weiter so.</span></div>`;
 
-        // Per-file table
-        $('perFileBody').innerHTML = r.fileMetrics.map(m => `
-            <tr>
-                <td>${escapeHtml(m.filename)}</td>
-                <td>${m.language}</td>
-                <td>${m.totalLines}</td>
-                <td>${m.security.totalCritical}</td>
-                <td>${m.loadY.toFixed(2)}</td>
-                <td class="${m.isZeroDefect ? 'pf-ok' : 'pf-no'}">${m.isZeroDefect ? '✓ Sauber' : '✗ Befunde'}</td>
-            </tr>`).join('');
+        // Filterable file tree
+        const languages = [...new Set(r.fileMetrics.map(file => file.language))].sort();
+        $('languageFilter').innerHTML = '<option value="all">Alle Sprachen</option>' + languages.map(language => `<option value="${escapeHtml(language)}">${escapeHtml(language)}</option>`).join('');
+        $('fileSearch').value = '';
+        $('languageFilter').value = 'all';
+        $('severityFilter').value = 'all';
+        renderFileTree(r.fileMetrics);
 
         // Certificate (with timestamped signature + owner)
         const OWNER = 'Patrick Frank Buckreus';
@@ -1075,6 +1156,49 @@
             certItem('Inhaber / Copyright', '© Patrick Frank Buckreus (05.01.1996)', '')
         ].join('');
         if (window.__lastFiles) storeAuditOutcome(r, window.__lastFiles);
+    }
+
+    function renderFileTree(metrics) {
+        const search = $('fileSearch').value.trim().toLowerCase();
+        const language = $('languageFilter').value;
+        const severity = $('severityFilter').value;
+        const filtered = metrics.filter(file => {
+            const state = file.security.totalCritical > 0 ? 'critical' : (file.isWarning ? 'warning' : 'clean');
+            return (!search || file.filename.toLowerCase().includes(search)) && (language === 'all' || file.language === language) && (severity === 'all' || state === severity);
+        });
+        $('visibleFileCount').textContent = `${filtered.length} von ${metrics.length} Dateien`;
+        $('fileFilterCount').textContent = `${metrics.length} gesamt`;
+        $('perFileBody').innerHTML = filtered.length ? filtered.map((file, index) => {
+            const parts = file.filename.split('/');
+            const name = parts.pop();
+            const folder = parts.length ? `<span class="file-path-folder">${escapeHtml(parts.join('/') + '/')}</span>` : '';
+            return `<tr data-testid="file-tree-row-${index}"><td>${folder}<span class="file-path-name">${escapeHtml(name)}</span></td><td>${escapeHtml(file.language)}</td><td>${file.totalLines}</td><td>${file.security.totalCritical}</td><td>${file.loadY.toFixed(2)}</td><td class="${file.isZeroDefect ? 'pf-ok' : 'pf-no'}">${file.isZeroDefect ? '✓ Sauber' : '✗ Befunde'}</td></tr>`;
+        }).join('') : '<tr><td colspan="6">Keine Dateien entsprechen den Filtern.</td></tr>';
+    }
+
+    function encodeCertificate(payload) {
+        const bytes = new TextEncoder().encode(JSON.stringify(payload));
+        let binary = '';
+        for (const byte of bytes) binary += String.fromCharCode(byte);
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    }
+
+    function decodeCertificate(value) {
+        const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
+        const binary = atob(base64 + '='.repeat((4 - base64.length % 4) % 4));
+        return JSON.parse(new TextDecoder().decode(Uint8Array.from(binary, char => char.charCodeAt(0))));
+    }
+
+    function showSharedCertificate(payload) {
+        if (payload.v !== 1 || typeof payload.hash !== 'string' || typeof payload.score !== 'number') throw new Error('Ungültiges Zertifikat');
+        const pass = Boolean(payload.pass);
+        $('sharedCertCard').classList.toggle('fail', !pass);
+        $('sharedCertSeal').innerHTML = pass ? ICON_CHECK : ICON_WARN;
+        $('sharedCertScore').textContent = String(payload.score);
+        $('sharedCertMeta').textContent = `${payload.files} Datei(en) · ${payload.lines} geprüfte Codezeilen · kein Quellcode enthalten`;
+        $('sharedCertStatus').innerHTML = (pass ? ICON_CHECK : ICON_WARN) + `<span class="t">${pass ? 'ZERO-DEFECT ZERTIFIZIERT' : 'AUDIT MIT BEFUNDEN'}</span>`;
+        $('sharedCertGrid').innerHTML = [certItem('Status', pass ? 'BESTANDEN ✓' : 'NICHT BESTANDEN', pass ? 'ok' : 'no'), certItem('Inhalts-Signatur', payload.hash, ''), certItem('Signatur-Hash', payload.signature, ''), certItem('Zeitstempel', new Date(payload.at).toLocaleString('de-DE'), '')].join('');
+        showView('shared');
     }
 
     function metric(label, value, cls) {
@@ -1122,9 +1246,26 @@
     })();
     $('exportBtn').addEventListener('click', printReport);
     $('certBtn').addEventListener('click', printCertificate);
+    $('fileSearch').addEventListener('input', () => window.__lastResults && renderFileTree(window.__lastResults.fileMetrics));
+    $('languageFilter').addEventListener('change', () => window.__lastResults && renderFileTree(window.__lastResults.fileMetrics));
+    $('severityFilter').addEventListener('change', () => window.__lastResults && renderFileTree(window.__lastResults.fileMetrics));
+    $('shareCertBtn').addEventListener('click', async () => {
+        const result = window.__lastResults, cert = window.__cert;
+        if (!result || !cert) return;
+        const payload = { v: 1, pass: result.isZeroDefect && result.totalCritical === 0, files: result.fileMetrics.length, lines: result.fileMetrics.reduce((sum, file) => sum + file.totalLines, 0), score: Number($('certScore').textContent), hash: cert.hash, signature: cert.signedHash, at: cert.stampISO };
+        const link = `${location.origin}${location.pathname}?certificate=${encodeCertificate(payload)}`;
+        try { await navigator.clipboard.writeText(link); toast('Datenschutzfreundlicher Zertifikatslink kopiert.'); }
+        catch (_) { window.prompt('Zertifikatslink kopieren:', link); }
+    });
+    $('sharedHomeBtn').addEventListener('click', () => { history.replaceState({}, '', location.pathname); showView('home'); });
     renderHistory();
     updateReviewEligibility();
     loadReviews();
+    const sharedParam = new URLSearchParams(location.search).get('certificate');
+    if (sharedParam) {
+        try { showSharedCertificate(decodeCertificate(sharedParam)); }
+        catch (_) { toast('Der Zertifikatslink ist ungültig.'); }
+    }
 
     function openPrint(title, bodyHtml) {
         const w = window.open('', '_blank');
