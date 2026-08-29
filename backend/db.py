@@ -48,22 +48,36 @@ def safe_config_status() -> dict[str, bool]:
     }
 
 
+async def read_file_reviews_unlocked() -> list[dict[str, Any]]:
+    try:
+        raw = await asyncio.to_thread(REVIEWS_FILE.read_text, encoding="utf-8")
+        value = json.loads(raw or "[]")
+        return value if isinstance(value, list) else []
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+
 async def read_file_reviews() -> list[dict[str, Any]]:
     async with FILE_LOCK:
-        try:
-            raw = await asyncio.to_thread(REVIEWS_FILE.read_text, encoding="utf-8")
-            value = json.loads(raw or "[]")
-            return value if isinstance(value, list) else []
-        except (FileNotFoundError, json.JSONDecodeError):
-            return []
+        return await read_file_reviews_unlocked()
+
+
+async def write_file_reviews_unlocked(reviews: list[dict[str, Any]]) -> None:
+    temp_file = REVIEWS_FILE.with_suffix(".json.tmp")
+    payload = json.dumps(reviews, ensure_ascii=False, indent=2)
+    await asyncio.to_thread(temp_file.write_text, payload, encoding="utf-8")
+    await asyncio.to_thread(temp_file.replace, REVIEWS_FILE)
 
 
 async def write_file_reviews(reviews: list[dict[str, Any]]) -> None:
     async with FILE_LOCK:
-        temp_file = REVIEWS_FILE.with_suffix(".json.tmp")
-        payload = json.dumps(reviews, ensure_ascii=False, indent=2)
-        await asyncio.to_thread(temp_file.write_text, payload, encoding="utf-8")
-        await asyncio.to_thread(temp_file.replace, REVIEWS_FILE)
+        await write_file_reviews_unlocked(reviews)
+
+
+async def prepend_file_review(review: dict[str, Any]) -> None:
+    async with FILE_LOCK:
+        reviews = await read_file_reviews_unlocked()
+        await write_file_reviews_unlocked([review, *reviews][:100])
 
 
 async def list_reviews_from_storage(app: FastAPI) -> list[dict[str, Any]]:
@@ -77,8 +91,7 @@ async def insert_review_into_storage(app: FastAPI, review: dict[str, Any]) -> No
     if app.state.mongo_connected:
         await app.state.db.reviews.insert_one(review.copy())
         return
-    reviews = await read_file_reviews()
-    await write_file_reviews([review, *reviews][:100])
+    await prepend_file_review(review)
 
 
 def initialize_storage_state(app: FastAPI) -> None:
@@ -115,6 +128,10 @@ async def connect_mongo_storage(
         app.state.mongo_connected = True
         app.state.storage_mode = "mongodb"
         await app.state.db.reviews.create_index("id", unique=True)
+        await app.state.db.reviews.create_index(
+            [("createdAt", DESCENDING)],
+            name="createdAt_desc_idx",
+        )
         if await app.state.db.reviews.count_documents({}) == 0:
             seed_reviews = await read_file_reviews()
             if seed_reviews:

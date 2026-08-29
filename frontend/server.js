@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
 
 const DEFAULT_FRONTEND_PORT = 3000;
 const BACKEND_PORT = 8001;
@@ -14,14 +15,19 @@ const LISTEN_HOST = '0.0.0.0';
 const METHOD_GET = 'GET';
 const API_PREFIX = '/api/';
 const VENDOR_QR_PATH = '/vendor/qrcode.js';
+const CACHE_DYNAMIC = 'no-store';
+const CACHE_HTML = 'no-cache, must-revalidate';
+const CACHE_STATIC = 'public, max-age=86400';
+const GZIP_LEVEL = 6;
+const COMPRESSIBLE_EXTENSIONS = new Set(['.html', '.css', '.js', '.json', '.svg']);
 const PORT = Number(process.env.PORT || DEFAULT_FRONTEND_PORT);
 const DIST_DIR = path.join(__dirname, 'dist');
 const SOURCE_ASSET_DIR = path.join(__dirname, '..', 'src', 'assets');
 const ASSET_DIR = fs.existsSync(DIST_DIR) ? DIST_DIR : SOURCE_ASSET_DIR;
 const MIME = { '.html': 'text/html; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8' };
 
-function send(res, status, body, type = 'text/plain; charset=utf-8') {
-  res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store' });
+function send(res, status, body, type = 'text/plain; charset=utf-8', headers = {}) {
+  res.writeHead(status, { 'Content-Type': type, 'Cache-Control': CACHE_DYNAMIC, ...headers });
   res.end(body);
 }
 
@@ -42,12 +48,30 @@ function resolveStaticFile(pathname) {
   return { file: path.resolve(ASSET_DIR, relative), vendorQr };
 }
 
-function serveStaticFile(pathname, res) {
+function staticCacheControl(extension) {
+  return extension === '.html' ? CACHE_HTML : CACHE_STATIC;
+}
+
+function sendStaticFile(req, res, file, data) {
+  const extension = path.extname(file);
+  const contentType = MIME[extension] || 'application/octet-stream';
+  const headers = { 'Cache-Control': staticCacheControl(extension), Vary: 'Accept-Encoding' };
+  const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
+  if (!acceptsGzip || !COMPRESSIBLE_EXTENSIONS.has(extension)) {
+    return send(res, STATUS_OK, data, contentType, headers);
+  }
+  zlib.gzip(data, { level: GZIP_LEVEL }, (error, compressed) => {
+    if (error) return send(res, STATUS_OK, data, contentType, headers);
+    send(res, STATUS_OK, compressed, contentType, { ...headers, 'Content-Encoding': 'gzip' });
+  });
+}
+
+function serveStaticFile(pathname, req, res) {
   const { file, vendorQr } = resolveStaticFile(pathname);
   if (file !== vendorQr && !file.startsWith(ASSET_DIR + path.sep)) return send(res, STATUS_FORBIDDEN, 'Forbidden');
   fs.readFile(file, (error, data) => {
     if (error) return send(res, STATUS_NOT_FOUND, 'Not found');
-    send(res, STATUS_OK, data, MIME[path.extname(file)] || 'application/octet-stream');
+    sendStaticFile(req, res, file, data);
   });
 }
 
@@ -55,7 +79,7 @@ function handleRequest(req, res) {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   if (url.pathname.startsWith(API_PREFIX)) return proxyApi(req, res);
   if (req.method !== METHOD_GET) return send(res, STATUS_METHOD_NOT_ALLOWED, 'Methode nicht erlaubt');
-  return serveStaticFile(url.pathname, res);
+  return serveStaticFile(url.pathname, req, res);
 }
 
 http.createServer(handleRequest).listen(PORT, LISTEN_HOST);

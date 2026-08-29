@@ -26,6 +26,8 @@ AuditIQ is a zero-egress code audit tool. Users can paste source code directly i
 - A small same-origin backend stores and serves public reviews only; review payloads never include source code.
 - Production review storage uses MongoDB Atlas via server-only MONGO_URL/DB_NAME. Development falls back to an atomically written local reviews.json if local MongoDB is unavailable.
 - A public system-status dashboard reports frontend/backend availability, active review storage mode, and boolean configuration readiness without exposing values, hosts, database names, credentials, or errors.
+- MongoDB maintains indexes for review IDs and descending creation time; local JSON fallback updates use one atomic read-modify-write lock.
+- HTML always revalidates, while static JS/images cache for one day and compressible assets are served with local gzip when supported.
 - No authentication, account, or third-party integration is required.
 
 ## Supported inputs
