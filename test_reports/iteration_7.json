@@ -1,0 +1,62 @@
+{
+  "summary": "Retest of frontend build-fix (frontend/build.js + yarn build script) plus prior review findings (server.js named constants, db.py identity comparison). yarn build now succeeds (exit 0) and produces a complete dist/ artifact; yarn-managed dev server (already running via supervisor) serves homepage and /vendor/qrcode.js on port 3000; public preview URL and /api/health are both healthy; server.js/db.py inspected and confirmed clean. 2 pre-existing browser checks re-run with no regression. No bugs found.",
+  "passed": 7,
+  "failed": 0,
+  "retest_needed": false,
+  "checks": [
+    {
+      "criterion": "Frontend production build command exists and succeeds",
+      "name": "yarn-build-exit-code",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "cd /app/frontend && rm -rf dist && yarn build -> 'yarn run v1.22.22 / $ node build.js / Done in 0.05s.' EXIT:0. package.json scripts.build = 'node build.js' (previously missing, causing 'error Command build not found')."
+    },
+    {
+      "criterion": "Production build creates complete deployable artifacts",
+      "name": "dist-artifact-contents-inspection",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "After clean `yarn build`, find dist -maxdepth 2 -> dist/code_auditor.html, dist/index.html, dist/auditiq-logo.png, dist/favicon.png, dist/vendor/qrcode.js all present. build.js copies src/assets -> dist and copies node_modules/qrcode-generator/dist/qrcode.js -> dist/vendor/qrcode.js, throwing if either source is missing."
+    },
+    {
+      "criterion": "Production server serves the built artifact",
+      "name": "server-serves-dist-on-port-3000",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "With frontend/dist present (supervisor-managed `node server.js` on :3000): curl -o /dev/null -w '%{http_code}' http://localhost:3000/ -> 200; same for http://localhost:3000/vendor/qrcode.js -> 200. grep console.log server.js -> no matches (no console logging)."
+    },
+    {
+      "criterion": "Public app and API remain healthy after build fix",
+      "name": "public-url-and-health-curl",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "curl -o /dev/null -w '%{http_code}' https://deploy-hub-247.preview.emergentagent.com/ -> 200. curl https://deploy-hub-247.preview.emergentagent.com/api/health -> {\"status\":\"ok\"}. Local http://localhost:8001/api/health -> {\"status\":\"ok\"}."
+    },
+    {
+      "criterion": "server.js uses named constants for backend port/status codes",
+      "name": "server-js-named-constants-inspection",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "grep -n 'PORT|STATUS_|const' server.js -> DEFAULT_FRONTEND_PORT=3000, BACKEND_PORT=8001, STATUS_OK=200, STATUS_BAD_GATEWAY=502, STATUS_METHOD_NOT_ALLOWED=405, STATUS_FORBIDDEN=403, STATUS_NOT_FOUND=404, LOOPBACK_HOST/LISTEN_HOST all declared and used throughout proxyApi()/route handler instead of inline literals."
+    },
+    {
+      "criterion": "db.py has no identity comparison against string/number literals; retains correct `is not None` sentinel check",
+      "name": "db-py-identity-comparison-inspection",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "grep -n ' is | is not ' backend/*.py -> only db.py:146 'if app.state.mongo_client is not None:' preceded by comment 'Identity comparison is intentional here: None is a singleton sentinel.' No comparisons against string/number literals found; per spec_deviations this is correct and was NOT changed to `!= None`."
+    },
+    {
+      "criterion": "Public app and API remain healthy after build fix (browser regression)",
+      "name": "home-explains-offline-audit-flow + public-reviews-loaded-from-backend",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Both pre-existing browser checks re-run by name (reran-persisted): home-explains-offline-audit-flow PASSED, public-reviews-loaded-from-backend PASSED. Backend pytest suite: cd /app/backend && python -m pytest -q -> 5 passed in 0.54s. No regression from the build fix."
+    }
+  ],
+  "bugs": [],
+  "action_items": [],
+  "note": "All 5 acceptance criteria (mapped to 7 check artifacts) verified: yarn build now exits 0 (was previously failing with 'Command build not found'), dist/ contains all required files including vendor/qrcode.js, the Node server serves them on :3000 with no console logging, the public preview URL and /api/health are healthy, and both flagged review findings (server.js constants, db.py identity comparison) are confirmed correctly resolved -- the db.py 'is not None' sentinel check was correctly left untouched per spec_deviations. No new UI surface was introduced by the build fix, so existing browser checks were re-run for regression coverage rather than adding new ones.",
+  "test_report_links": ["/app/test_reports/iteration_6.json"],
+  "success_rate": {"backend": "6/6 backend-lane checks (100%)", "browser": "1 browser-lane checks entry covering 2 re-run scripts (100%)"}
+}

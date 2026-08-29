@@ -12,7 +12,9 @@ const STATUS_NOT_FOUND = 404;
 const LOOPBACK_HOST = '127.0.0.1';
 const LISTEN_HOST = '0.0.0.0';
 const PORT = Number(process.env.PORT || DEFAULT_FRONTEND_PORT);
-const ASSET_DIR = path.join(__dirname, '..', 'src', 'assets');
+const DIST_DIR = path.join(__dirname, 'dist');
+const SOURCE_ASSET_DIR = path.join(__dirname, '..', 'src', 'assets');
+const ASSET_DIR = fs.existsSync(DIST_DIR) ? DIST_DIR : SOURCE_ASSET_DIR;
 const MIME = { '.html': 'text/html; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8' };
 
 function send(res, status, body, type = 'text/plain; charset=utf-8') {
@@ -33,7 +35,8 @@ http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   if (url.pathname.startsWith('/api/')) return proxyApi(req, res);
   if (req.method !== 'GET') return send(res, STATUS_METHOD_NOT_ALLOWED, 'Methode nicht erlaubt');
-  const vendorQr = path.join(__dirname, 'node_modules', 'qrcode-generator', 'dist', 'qrcode.js');
+  const builtVendorQr = path.join(DIST_DIR, 'vendor', 'qrcode.js');
+  const vendorQr = fs.existsSync(builtVendorQr) ? builtVendorQr : path.join(__dirname, 'node_modules', 'qrcode-generator', 'dist', 'qrcode.js');
   const relative = url.pathname === '/' ? 'code_auditor.html' : decodeURIComponent(url.pathname.replace(/^\/+/, ''));
   const file = url.pathname === '/vendor/qrcode.js' ? vendorQr : path.resolve(ASSET_DIR, relative);
   if (file !== vendorQr && !file.startsWith(ASSET_DIR + path.sep)) return send(res, STATUS_FORBIDDEN, 'Forbidden');
