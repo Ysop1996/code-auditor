@@ -3,6 +3,7 @@ from pathlib import Path
 from threading import Lock
 from typing import Literal
 import json
+import os
 import uuid
 
 from fastapi import APIRouter, FastAPI, HTTPException, status
@@ -73,9 +74,10 @@ async def create_review(payload: ReviewCreate) -> ReviewResponse:
 
 
 app = FastAPI(title="AuditIQ Reviews API")
+cors_origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "*").split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
 )

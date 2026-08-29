@@ -1,0 +1,62 @@
+{
+  "summary": "Retest of deployment fix: backend/.env presence and parseability, backend startup + /api/health, environment-driven CORS, and public preview URL health. Backend pytest suite (5 tests) re-run clean. 2 relevant pre-existing browser checks re-ran by name with no regression. Public URL https://deploy-hub-247.preview.emergentagent.com/api/health confirmed returning 200 {status:'ok'}. No new criteria required new artifacts beyond backend inspection since all 4 matrix items are already covered by existing backend tests + curl evidence + browser checks.",
+  "passed": 7,
+  "failed": 0,
+  "retest_needed": false,
+  "checks": [
+    {
+      "criterion": "Production build context can read the required backend environment file",
+      "name": "backend-env-file-inspection",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "/app/backend/.env exists, parses as KEY=VALUE lines (MONGO_URL=mongodb://localhost:27017, DB_NAME=auditiq, CORS_ORIGINS=*), no embedded secrets/passwords present."
+    },
+    {
+      "criterion": "Backend starts with the deployment configuration",
+      "name": "test_health_endpoint_ok",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "GET http://localhost:8001/api/health -> 200 {\"status\":\"ok\"} (part of 5/5 pytest suite re-run: 5 passed in 0.48s)"
+    },
+    {
+      "criterion": "Production origin configuration is environment-driven",
+      "name": "cors-preflight-check",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "server.py line 77 reads os.getenv('CORS_ORIGINS', '*'); OPTIONS http://localhost:8001/api/health with Origin header -> 200, access-control-allow-origin: * returned (env-driven, not hardcoded)."
+    },
+    {
+      "criterion": "Public application remains operational after the deployment fix",
+      "name": "public-url-health-check",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "GET https://deploy-hub-247.preview.emergentagent.com/api/health -> HTTP/2 200 {\"status\":\"ok\"}"
+    },
+    {
+      "criterion": "Öffentliche Health-API / Rezensionen (regression, backend suite)",
+      "name": "test_tscheck_public_health.py + test_tscheck_reviews_api.py",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "cd /app/backend && python -m pytest -q -> 5 passed in 0.48s"
+    },
+    {
+      "criterion": "Public application remains operational (frontend regression)",
+      "name": "home-explains-offline-audit-flow",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Re-ran by name (reran-persisted) - passed, no regression, homepage renders correctly"
+    },
+    {
+      "criterion": "Öffentliche Rezensionen kommen aus dem Backend (frontend regression, exercises CORS-enabled API call from browser)",
+      "name": "public-reviews-loaded-from-backend",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Re-ran by name (reran-persisted) - passed, no regression; frontend successfully fetches reviews from backend API confirming CORS is not blocking browser-origin requests"
+    }
+  ],
+  "bugs": [],
+  "action_items": [],
+  "note": "Deployment fix verified: backend/.env is present/parseable/secret-free, backend boots and /api/health returns 200 locally and on the public preview URL, CORS_ORIGINS is read from env (not hardcoded) and preflight succeeds. All 6 pre-existing browser checks and 5 backend tests continue to pass (only 2 most relevant browser checks re-run here per retest-mode guidance to avoid redundant re-runs already covered in iteration_4). No regressions, no bugs found.",
+  "test_report_links": [],
+  "success_rate": {"backend": "4/4 new deployment criteria (100%)", "browser": "2/2 regression re-runs (100%)"}
+}
