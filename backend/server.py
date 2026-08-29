@@ -6,6 +6,7 @@ import json
 import uuid
 
 from fastapi import APIRouter, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 
@@ -72,4 +73,10 @@ async def create_review(payload: ReviewCreate) -> ReviewResponse:
 
 
 app = FastAPI(title="AuditIQ Reviews API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+)
 app.include_router(api_router)

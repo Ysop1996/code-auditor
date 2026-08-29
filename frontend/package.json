@@ -2,7 +2,10 @@
   "name": "auditiq-preview",
   "private": true,
   "scripts": {
-    "dev": "node server.js",
+    "dev": "yarn start",
     "start": "node server.js"
+  },
+  "dependencies": {
+    "qrcode-generator": "2.0.4"
   }
 }

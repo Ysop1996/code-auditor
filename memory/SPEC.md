@@ -15,6 +15,9 @@ AuditIQ is a zero-egress code audit tool. Users can paste source code directly i
 - Compare a repeated audit of the same project against its previous local snapshot, showing fixed, new, and remaining findings.
 - Filter the per-file project tree by path, language, and audit status.
 - Copy a privacy-safe certificate URL containing only verdict metadata and signatures, never source code or filenames.
+- Export the local before/after comparison as part of the printable PDF report.
+- Save up to 12 path/language/status filter combinations as browser-local favorites.
+- Display a scannable QR code generated locally in the browser for the privacy-safe certificate URL.
 
 ## Data and processing
 - Source code is held in browser memory only during the audit.

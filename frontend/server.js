@@ -24,9 +24,10 @@ http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   if (url.pathname.startsWith('/api/')) return proxyApi(req, res);
   if (req.method !== 'GET') return send(res, 405, 'Methode nicht erlaubt');
+  const vendorQr = path.join(__dirname, 'node_modules', 'qrcode-generator', 'dist', 'qrcode.js');
   const relative = url.pathname === '/' ? 'code_auditor.html' : decodeURIComponent(url.pathname.replace(/^\/+/, ''));
-  const file = path.resolve(ASSET_DIR, relative);
-  if (!file.startsWith(ASSET_DIR + path.sep)) return send(res, 403, 'Forbidden');
+  const file = url.pathname === '/vendor/qrcode.js' ? vendorQr : path.resolve(ASSET_DIR, relative);
+  if (file !== vendorQr && !file.startsWith(ASSET_DIR + path.sep)) return send(res, 403, 'Forbidden');
   fs.readFile(file, (error, data) => {
     if (error) return send(res, 404, 'Not found');
     send(res, 200, data, MIME[path.extname(file)] || 'application/octet-stream');
