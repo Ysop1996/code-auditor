@@ -1,0 +1,55 @@
+{
+  "summary": "Retest of code-quality fixes: identity-comparison audit in backend, simplified lifespan(), console-log-free server.js with named constants, and typed test functions. All criteria verified via static inspection plus re-run of backend pytest suite and 2 relevant existing browser checks. No regressions.",
+  "passed": 6,
+  "failed": 0,
+  "retest_needed": false,
+  "checks": [
+    {
+      "criterion": "Backend has no incorrect identity comparison against string or numeric literals",
+      "name": "identity-comparison-inspection",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "grep -rn ' is | is not ' /app/backend/*.py -> only match is db.py:145 'if app.state.mongo_client is not None' (valid None-sentinel check, commented as intentional). No `is`/`is not` against string or numeric constants found anywhere in backend/*.py."
+    },
+    {
+      "criterion": "Database lifespan function is simplified",
+      "name": "lifespan-simplification-inspection",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "db.py lifespan() (lines ~141-148): calls initialize_storage_state(app), awaits configure_review_storage(app), yields, then closes app.state.mongo_client in finally. All Mongo connection/index/seeding logic lives in separate typed helpers: storage_settings() -> tuple[str,str,bool], connect_mongo_storage(app, mongo_url, db_name, production_mode) -> None, configure_review_storage(app) -> None."
+    },
+    {
+      "criterion": "Frontend production server emits no console logging",
+      "name": "server-js-no-console-log",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "grep console.log /app/frontend/server.js -> no matches. Server confirmed running: GET http://localhost:8001/api/health -> 200 (proxy path validated indirectly via browser checks below which hit /api/* through the frontend origin)."
+    },
+    {
+      "criterion": "Frontend server uses named constants instead of magic ports/status codes",
+      "name": "server-js-named-constants-inspection",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "server.js declares DEFAULT_FRONTEND_PORT=3000, BACKEND_PORT=8001, STATUS_OK=200, STATUS_BAD_GATEWAY=502, STATUS_METHOD_NOT_ALLOWED=405, STATUS_FORBIDDEN=403, STATUS_NOT_FOUND=404, LOOPBACK_HOST/LISTEN_HOST; all used in proxyApi()/send()/route handling instead of inline literals."
+    },
+    {
+      "criterion": "Priority backend tests have type annotations",
+      "name": "test_tscheck_public_health.py + test_tscheck_reviews_api.py",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "cd /app/backend && python -m pytest -q -> 5 passed in 0.55s. Manual inspection: every test function (test_public_health_endpoint_ok, test_health_endpoint_ok, test_reviews_list_contains_seeded_lea_review, test_create_valid_review_is_accepted_and_listed, test_create_review_with_short_name_and_text_and_bad_rating_rejected) has explicit '-> None'; typed payload/response vars use dict[str, object]/list[dict[str, object]]."
+    },
+    {
+      "criterion": "Public app and API have no regression",
+      "name": "home-explains-offline-audit-flow + public-reviews-loaded-from-backend",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "GET http://localhost:8001/api/health -> 200 {status:'ok'} (pytest). Browser checks re-run by name (reran-persisted): home-explains-offline-audit-flow PASSED, public-reviews-loaded-from-backend PASSED - homepage renders, reviews fetched from backend via frontend proxy, no crashes."
+    }
+  ],
+  "bugs": [],
+  "action_items": [],
+  "note": "All 6 acceptance criteria confirmed via source inspection (identity comparisons, lifespan structure, console.log absence, named constants) plus re-run of the existing 5-test backend pytest suite (5/5 passed) and 2 pre-existing browser checks (both passed, reran-persisted, no regression). No new UI surface introduced by this round of fixes, so no new browser checks were required beyond the existing public-app regression checks. No bugs found.",
+  "test_report_links": ["/app/test_reports/iteration_5.json"],
+  "success_rate": {"backend": "5/5 backend criteria (100%)", "browser": "1/1 regression criterion, 2 checks re-run (100%)"}
+}

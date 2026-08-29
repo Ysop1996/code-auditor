@@ -4,6 +4,7 @@ import asyncio
 import json
 import logging
 import os
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -80,49 +81,67 @@ async def insert_review_into_storage(app: FastAPI, review: dict[str, Any]) -> No
     await write_file_reviews([review, *reviews][:100])
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+def initialize_storage_state(app: FastAPI) -> None:
     app.state.mongo_client = None
     app.state.db = None
     app.state.mongo_connected = False
     app.state.storage_mode = "file"
 
+
+def storage_settings() -> tuple[str, str, bool]:
     mongo_url = env_value("MONGO_URL")
     db_name = env_value("DB_NAME")
     app_env = env_value("APP_ENV", "development").lower()
-    atlas_mode = mongo_url.startswith("mongodb+srv://")
-    production_mode = app_env == "production" or atlas_mode
+    production_mode = app_env == "production" or mongo_url.startswith("mongodb+srv://")
+    return mongo_url, db_name, production_mode
 
+
+async def connect_mongo_storage(
+    app: FastAPI,
+    mongo_url: str,
+    db_name: str,
+    production_mode: bool,
+) -> None:
+    client = AsyncMongoClient(
+        mongo_url,
+        server_api=ServerApi("1"),
+        connectTimeoutMS=1500,
+        serverSelectionTimeoutMS=1500,
+    )
+    try:
+        await client.admin.command("ping")
+        app.state.mongo_client = client
+        app.state.db = client[db_name]
+        app.state.mongo_connected = True
+        app.state.storage_mode = "mongodb"
+        await app.state.db.reviews.create_index("id", unique=True)
+        if await app.state.db.reviews.count_documents({}) == 0:
+            seed_reviews = await read_file_reviews()
+            if seed_reviews:
+                await app.state.db.reviews.insert_many([review.copy() for review in seed_reviews])
+        log.info("MongoDB review storage enabled")
+    except Exception as error:
+        await client.close()
+        if production_mode:
+            raise RuntimeError("Production review storage is unavailable") from error
+        log.warning("MongoDB unavailable; using local JSON review fallback")
+
+
+async def configure_review_storage(app: FastAPI) -> None:
+    mongo_url, db_name, production_mode = storage_settings()
     if production_mode and (not mongo_url or not db_name):
         raise RuntimeError("Production review storage configuration is incomplete")
-
     if mongo_url and db_name:
-        client = AsyncMongoClient(
-            mongo_url,
-            server_api=ServerApi("1"),
-            connectTimeoutMS=1500,
-            serverSelectionTimeoutMS=1500,
-        )
-        try:
-            await client.admin.command("ping")
-            app.state.mongo_client = client
-            app.state.db = client[db_name]
-            app.state.mongo_connected = True
-            app.state.storage_mode = "mongodb"
-            await app.state.db.reviews.create_index("id", unique=True)
-            if await app.state.db.reviews.count_documents({}) == 0:
-                seed_reviews = await read_file_reviews()
-                if seed_reviews:
-                    await app.state.db.reviews.insert_many([review.copy() for review in seed_reviews])
-            log.info("MongoDB review storage enabled")
-        except Exception as error:
-            await client.close()
-            if production_mode:
-                raise RuntimeError("Production review storage is unavailable") from error
-            log.warning("MongoDB unavailable; using local JSON review fallback")
+        await connect_mongo_storage(app, mongo_url, db_name, production_mode)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    initialize_storage_state(app)
+    await configure_review_storage(app)
     try:
         yield
     finally:
+        # Identity comparison is intentional here: None is a singleton sentinel.
         if app.state.mongo_client is not None:
             await app.state.mongo_client.close()
