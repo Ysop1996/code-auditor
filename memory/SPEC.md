@@ -28,6 +28,7 @@ AuditIQ is a zero-egress code audit tool. Users can paste source code directly i
 - A public system-status dashboard reports frontend/backend availability, active review storage mode, and boolean configuration readiness without exposing values, hosts, database names, credentials, or errors.
 - MongoDB maintains indexes for review IDs and descending creation time; local JSON fallback updates use one atomic read-modify-write lock.
 - HTML always revalidates, while static JS/images cache for one day and compressible assets are served with local gzip when supported.
+- Cloudflare may front the permanent Emergent production hostname as DNS/CDN. `/healthz` checks the frontend, `/api/health` checks the backend, and all `/api/` responses explicitly disable edge caching.
 - No authentication, account, or third-party integration is required.
 
 ## Supported inputs

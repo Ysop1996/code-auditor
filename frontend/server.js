@@ -15,6 +15,7 @@ const LISTEN_HOST = '0.0.0.0';
 const METHOD_GET = 'GET';
 const API_PREFIX = '/api/';
 const VENDOR_QR_PATH = '/vendor/qrcode.js';
+const HEALTH_PATH = '/healthz';
 const CACHE_DYNAMIC = 'no-store';
 const CACHE_HTML = 'no-cache, must-revalidate';
 const CACHE_STATIC = 'public, max-age=86400';
@@ -77,6 +78,7 @@ function serveStaticFile(pathname, req, res) {
 
 function handleRequest(req, res) {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  if (url.pathname === HEALTH_PATH) return send(res, STATUS_OK, 'ok');
   if (url.pathname.startsWith(API_PREFIX)) return proxyApi(req, res);
   if (req.method !== METHOD_GET) return send(res, STATUS_METHOD_NOT_ALLOWED, 'Methode nicht erlaubt');
   return serveStaticFile(url.pathname, req, res);

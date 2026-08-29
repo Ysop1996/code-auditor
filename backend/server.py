@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
+from collections.abc import Awaitable, Callable
 from typing import Literal
 import os
 import uuid
 
-from fastapi import APIRouter, FastAPI, HTTPException, status
+from fastapi import APIRouter, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -91,4 +92,17 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
 )
+
+
+@app.middleware("http")
+async def prevent_api_edge_caching(
+    request: Request,
+    call_next: Callable[[Request], Awaitable[Response]],
+) -> Response:
+    response = await call_next(request)
+    if request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 app.include_router(api_router)

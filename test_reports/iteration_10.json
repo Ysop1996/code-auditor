@@ -1,0 +1,62 @@
+{
+  "summary": "Retest of Cloudflare deployment readiness fix (env-file line split for APP_ENV/APP_URL). All 6 acceptance criteria verified: all_code.txt removed, /healthz returns 200 'ok' publicly, /api/health and /api/health/config carry Cache-Control: no-store on both localhost and the public Cloudflare-fronted URL (Cloudflare adds no-cache/must-revalidate but no-store is preserved), backend/.env now has APP_ENV and APP_URL on separate parsable lines, CLOUDFLARE_DEPLOYMENT.md documents permanent-URL requirement/CNAME/Full(strict)/DNS-only-first/API cache bypass/health checks/rollback with no secrets, and the public app flow (home + reviews) loads cleanly with backend Online.",
+  "passed": 6,
+  "failed": 0,
+  "retest_needed": false,
+  "checks": [
+    {
+      "criterion": "Exportdatei wurde vollständig entfernt",
+      "name": "all-code-txt-removed",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "ls /app/all_code.txt -> 'No such file or directory'; find /app/frontend -iname '*all_code*' -> no matches."
+    },
+    {
+      "criterion": "Cloudflare-taugliche Frontend-Health-Route funktioniert",
+      "name": "healthz-public-curl",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/healthz -> 200, body 'ok'. Public: GET https://deploy-hub-247.preview.emergentagent.com/healthz -> statusCode 200, contentType text/plain, body 'ok'. No secrets in response."
+    },
+    {
+      "criterion": "API-Antworten sind gegen Edge-Caching geschützt",
+      "name": "api-health-cache-control-curl",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "localhost: curl -D- http://localhost:8001/api/health and /api/health/config -> HTTP 200, cache-control: no-store (both). Public via Cloudflare: curl -D- https://deploy-hub-247.preview.emergentagent.com/api/health and /api/health/config -> HTTP/2 200, cache-control: 'no-store, no-cache, must-revalidate' (no-store retained; Cloudflare appended extra directives, cf-cache-status: DYNAMIC)."
+    },
+    {
+      "criterion": "Deployment-Umgebung ist korrekt formatiert",
+      "name": "backend-env-format-review",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "cat /app/backend/.env: MONGO_URL, DB_NAME, CORS_ORIGINS, APP_ENV=development, APP_URL=https://deploy-hub-247.preview.emergentagent.com each on its own line -> parsable as separate key=value pairs (previously APP_ENV and APP_URL were merged onto one line)."
+    },
+    {
+      "criterion": "Cloudflare-Rollout ist dokumentiert und sicher vorbereitet",
+      "name": "cloudflare-deployment-doc-review",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "/app/CLOUDFLARE_DEPLOYMENT.md: requires permanent Emergent production hostname (not preview URL) before CNAME, CNAME 'Proxy: DNS only during hostname verification, then Proxied', SSL/TLS 'Full (strict)', /api/ cache-bypass rule, health checks for /healthz, /api/health, /api/health/config, and a Rollback section (Proxied -> DNS only). grep for token/secret/password/key patterns in the file -> none found."
+    },
+    {
+      "criterion": "Öffentlicher App-Flow bleibt gesund",
+      "name": "home-explains-offline-audit-flow + public-reviews-loaded-from-backend",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Both persisted browser checks reran against the public URL: 'home-explains-offline-audit-flow' PASSED (home page renders, no thrown errors); 'public-reviews-loaded-from-backend' PASSED (reviews list loads from backend). Screenshots captured for both, no console-blocking errors."
+    },
+    {
+      "criterion": "Backend regression suite",
+      "name": "backend-pytest-suite",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "cd /app/backend && python -m pytest -q -p no:cacheprovider -> '5 passed in 0.45s' (test_tscheck_public_health.py, test_tscheck_reviews_api.py)."
+    }
+  ],
+  "bugs": [],
+  "action_items": [],
+  "note": "Retest mode: reused existing browser checks by name only (no script resend) and reran the existing backend pytest suite. New criteria in this briefing (all_code.txt removal, /healthz, no-store caching, .env formatting, CLOUDFLARE_DEPLOYMENT.md content) are static/config/API-level and were verified via direct curl (localhost and the public Cloudflare-fronted URL) and file review rather than new persisted artifacts, since they have no distinct UI surface beyond the already-covered home/reviews flow. Confirmed the spec_deviation note: Cloudflare appends 'no-cache, must-revalidate' to Cache-Control but 'no-store' remains present as required.",
+  "test_report_links": ["/app/test_reports/iteration_9.json"],
+  "success_rate": {"backend": "5/5 backend-lane checks (100%)", "browser": "2/2 browser-lane checks (100%)"}
+}
