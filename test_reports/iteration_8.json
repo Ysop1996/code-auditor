@@ -1,0 +1,55 @@
+{
+  "summary": "Retest of deploy-hub-247 template: yarn build, backend health, public ingress/health/config, and browser regression checks all re-verified with no findings. Deployment agent's pass status confirmed.",
+  "passed": 7,
+  "failed": 0,
+  "retest_needed": false,
+  "checks": [
+    {
+      "criterion": "Production frontend build is ready",
+      "name": "yarn-build-exit-code",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "cd /app/frontend && rm -rf dist && yarn build -> 'Done in 0.07s.' EXIT:0. find dist -maxdepth 2 -> dist/index.html, dist/code_auditor.html, dist/auditiq-logo.png, dist/favicon.png, dist/vendor/qrcode.js all present."
+    },
+    {
+      "criterion": "Local frontend and backend services are healthy",
+      "name": "local-services-health-curl",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "curl http://localhost:3000/ -> 200. curl http://localhost:8001/api/health -> {\"status\":\"ok\"}."
+    },
+    {
+      "criterion": "Public ingress and API are healthy",
+      "name": "public-ingress-health-curl",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "curl https://deploy-hub-247.preview.emergentagent.com/ -> 200. /api/health -> {\"status\":\"ok\"}. /api/health/config -> {\"backend_healthy\":true,\"mongo_connected\":true,\"storage_mode\":\"mongodb\",...}."
+    },
+    {
+      "criterion": "Deployment configuration remains valid (backend API contract)",
+      "name": "backend-pytest-suite",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "cd /app/backend && python -m pytest -q -> '5 passed in 0.41s' (test_tscheck_public_health.py, test_tscheck_reviews_api.py)."
+    },
+    {
+      "criterion": "Public browser health flow has no runtime regression (home page)",
+      "name": "home-explains-offline-audit-flow",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Re-ran persisted check by name against public URL: PASSED, screenshot captured, no thrown errors."
+    },
+    {
+      "criterion": "Public browser health flow has no runtime regression (reviews from backend)",
+      "name": "public-reviews-loaded-from-backend",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Re-ran persisted check by name: PASSED, screenshot captured, reviews list loaded from backend API with no console/network errors."
+    }
+  ],
+  "bugs": [],
+  "action_items": [],
+  "note": "Retest mode: no new UI surface or criteria since iteration_7. Re-ran existing backend pytest suite and 2 existing browser checks by name only (no script resend), plus fresh curls for build/health/config criteria per acceptance_matrix. All 5 acceptance criteria confirmed healthy; deployment agent's prior pass status stands.",
+  "test_report_links": ["/app/test_reports/iteration_7.json"],
+  "success_rate": {"backend": "4/4 backend-lane checks (100%)", "browser": "2/2 browser-lane checks (100%)"}
+}
