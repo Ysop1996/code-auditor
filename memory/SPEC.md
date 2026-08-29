@@ -24,6 +24,8 @@ AuditIQ is a zero-egress code audit tool. Users can paste source code directly i
 - The existing deterministic client-side engine calculates security pattern counts, performance heuristics, field metrics, and a content signature.
 - Audit code and project history remain in browser localStorage and are never sent to the server.
 - A small same-origin backend stores and serves public reviews only; review payloads never include source code.
+- Production review storage uses MongoDB Atlas via server-only MONGO_URL/DB_NAME. Development falls back to an atomically written local reviews.json if local MongoDB is unavailable.
+- A public system-status dashboard reports frontend/backend availability, active review storage mode, and boolean configuration readiness without exposing values, hosts, database names, credentials, or errors.
 - No authentication, account, or third-party integration is required.
 
 ## Supported inputs

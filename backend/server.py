@@ -1,8 +1,5 @@
 from datetime import datetime, timezone
-from pathlib import Path
-from threading import Lock
 from typing import Literal
-import json
 import os
 import uuid
 
@@ -10,13 +7,26 @@ from fastapi import APIRouter, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-
-DATA_FILE = Path(__file__).with_name("reviews.json")
-DATA_LOCK = Lock()
+from db import insert_review_into_storage, lifespan, list_reviews_from_storage, safe_config_status
 
 
 class HealthResponse(BaseModel):
     status: str
+
+
+class ConfigStatus(BaseModel):
+    mongo_url_configured: bool
+    db_name_configured: bool
+    cors_origins_configured: bool
+    production_mode: bool
+
+
+class DiagnosticsResponse(BaseModel):
+    backend_healthy: bool
+    mongo_connected: bool
+    storage_mode: str
+    fallback_available: bool
+    config: ConfigStatus
 
 
 class ReviewCreate(BaseModel):
@@ -33,13 +43,6 @@ class ReviewResponse(BaseModel):
     createdAt: str
 
 
-def read_reviews() -> list[dict]:
-    try:
-        return json.loads(DATA_FILE.read_text(encoding="utf-8"))
-    except (FileNotFoundError, json.JSONDecodeError):
-        return []
-
-
 api_router = APIRouter(prefix="/api")
 
 
@@ -48,9 +51,21 @@ async def health() -> HealthResponse:
     return HealthResponse(status="ok")
 
 
+@api_router.get("/health/config", response_model=DiagnosticsResponse)
+async def health_config() -> DiagnosticsResponse:
+    return DiagnosticsResponse(
+        backend_healthy=True,
+        mongo_connected=bool(app.state.mongo_connected),
+        storage_mode=app.state.storage_mode,
+        fallback_available=True,
+        config=ConfigStatus(**safe_config_status()),
+    )
+
+
 @api_router.get("/reviews", response_model=list[ReviewResponse])
 async def list_reviews() -> list[ReviewResponse]:
-    return [ReviewResponse(**review) for review in read_reviews()]
+    reviews = await list_reviews_from_storage(app)
+    return [ReviewResponse(**review) for review in reviews]
 
 
 @api_router.post("/reviews", response_model=ReviewResponse, status_code=status.HTTP_201_CREATED)
@@ -64,16 +79,11 @@ async def create_review(payload: ReviewCreate) -> ReviewResponse:
     )
     if len(review.name) < 2 or len(review.text) < 10:
         raise HTTPException(status_code=400, detail="Ungültige Rezension")
-    with DATA_LOCK:
-        reviews = read_reviews()
-        DATA_FILE.write_text(
-            json.dumps([review.model_dump(), *reviews][:100], ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
+    await insert_review_into_storage(app, review.model_dump())
     return review
 
 
-app = FastAPI(title="AuditIQ Reviews API")
+app = FastAPI(title="AuditIQ Reviews API", lifespan=lifespan)
 cors_origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "*").split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,

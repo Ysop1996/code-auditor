@@ -350,12 +350,28 @@
     .review-form h3 { margin-bottom: 8px; }
     .review-lock { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
     .review-form textarea { min-height: 100px; }
+    .status-panel { background: var(--ink); color: #fff; padding: 24px; margin: 0 0 46px; box-shadow: var(--shadow); }
+    .status-panel-head { display: flex; justify-content: space-between; gap: 20px; align-items: start; margin-bottom: 18px; }
+    .status-panel h2 { color: #fff; font-size: 23px; }
+    .status-panel p { color: #aaa99f; font-size: 13px; margin-top: 4px; }
+    .status-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: rgba(255,255,255,.12); }
+    .status-card { background: #20211d; min-height: 120px; padding: 17px; }
+    .status-label { color: #94948a; font: 10px var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+    .status-value { font-size: 17px; font-weight: 800; margin: 18px 0 5px; }
+    .status-detail { color: #aaa99f; font-size: 11px; line-height: 1.5; }
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #3ecf8e; margin-right: 7px; box-shadow: 0 0 0 4px rgba(62,207,142,.12); }
+    .status-dot.warn { background: #f0a23b; box-shadow: 0 0 0 4px rgba(240,162,59,.12); }
+    .status-dot.down { background: #ff6a5c; box-shadow: 0 0 0 4px rgba(255,106,92,.12); }
+    .status-config { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+    .config-chip { border: 1px solid rgba(255,255,255,.15); color: #c5c5bd; padding: 5px 8px; font: 10px var(--mono); }
+    .status-panel .btn-ghost { color: #fff; border-color: rgba(255,255,255,.22); }
     @media (max-width: 760px) {
         .egress-badge { display: none; }
         .home-hero, .reviews-shell { grid-template-columns: 1fr; }
         .home-grid { grid-template-columns: 1fr; }
         .history-item { grid-template-columns: 1fr 1fr; }
         .history-title { grid-column: 1 / -1; }
+        .status-grid { grid-template-columns: 1fr 1fr; }
     }
 </style>
 </head>
@@ -371,6 +387,7 @@
         <div class="top-actions">
             <button class="nav-btn" id="homeNavBtn" type="button" data-testid="home-nav-button">Start</button>
             <button class="nav-btn" id="auditNavBtn" type="button" data-testid="audit-nav-button">Audit starten</button>
+            <button class="nav-btn" id="statusNavBtn" type="button" data-testid="status-nav-button">Systemstatus</button>
             <div class="egress-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> ZERO-EGRESS · 100% LOKAL</div>
         </div>
     </div>
@@ -394,6 +411,17 @@
                 <article class="how-card"><div class="how-no">02 · ANALYSE</div><h3>Im Browser prüfen</h3><p>Sicherheitsmuster, Komplexität und Qualitätswerte werden deterministisch berechnet.</p></article>
                 <article class="how-card"><div class="how-no">03 · VERBESSERN</div><h3>Erfolg dokumentieren</h3><p>Bestandene Projekte und geprüfte Codezeilen werden nur lokal in Ihrem Browser gespeichert.</p></article>
             </div>
+
+            <section class="status-panel" id="statusSection" data-testid="system-status-dashboard">
+                <div class="status-panel-head"><div><h2>Systemstatus</h2><p id="statusCheckedAt" data-testid="status-checked-at">Sichere Konfigurationsprüfung wird geladen…</p></div><button class="btn btn-ghost" id="refreshStatusBtn" type="button" data-testid="refresh-status-button">Neu prüfen</button></div>
+                <div class="status-grid">
+                    <article class="status-card"><div class="status-label">Frontend</div><div class="status-value" id="frontendStatus" data-testid="frontend-status"><span class="status-dot"></span>Online</div><div class="status-detail">Audit-Engine läuft lokal in diesem Browser.</div></article>
+                    <article class="status-card"><div class="status-label">Backend</div><div class="status-value" id="backendStatus" data-testid="backend-status"><span class="status-dot warn"></span>Prüfe…</div><div class="status-detail">Rezensionen und öffentliche Status-API.</div></article>
+                    <article class="status-card"><div class="status-label">Review-Speicher</div><div class="status-value" id="storageStatus" data-testid="storage-status"><span class="status-dot warn"></span>Prüfe…</div><div class="status-detail" id="storageDetail" data-testid="storage-detail">Atlas in Produktion, lokale Datei im Offline-Modus.</div></article>
+                    <article class="status-card"><div class="status-label">Konfiguration</div><div class="status-value" id="configStatus" data-testid="config-status"><span class="status-dot warn"></span>Prüfe…</div><div class="status-detail">Es werden nur Vorhanden-/Nicht-vorhanden-Signale angezeigt.</div></article>
+                </div>
+                <div class="status-config" id="configChips" data-testid="config-diagnostics"><span class="config-chip">Keine Geheimnisse oder Werte werden übertragen</span></div>
+            </section>
 
             <div id="historySection">
                 <div class="dashboard-head"><div><h2>Meine erfolgreichen Audits</h2><p>Nur auf diesem Gerät sichtbar · lokal gespeichert</p></div><button class="btn btn-ghost" id="clearHistoryBtn" type="button" data-testid="clear-history-button">Historie löschen</button></div>
@@ -831,6 +859,40 @@
                 <article class="review" data-testid="review-${index}"><div class="review-top"><span class="review-name">${escapeHtml(review.name)}</span><span class="review-stars">${'★'.repeat(review.rating)}</span></div><p class="review-text">${escapeHtml(review.text)}</p></article>`).join('') : '<div class="history-empty">Noch keine Rezensionen. Die erste erfolgreiche Verbesserung kann hier geteilt werden.</div>';
         } catch (_) {
             $('reviewsList').innerHTML = '<div class="history-empty">Rezensionen sind vorübergehend nicht verfügbar.</div>';
+        }
+    }
+
+    function statusValue(id, label, state) {
+        const dotClass = state === 'ok' ? '' : (state === 'warn' ? 'warn' : 'down');
+        $(id).innerHTML = `<span class="status-dot ${dotClass}"></span>${escapeHtml(label)}`;
+    }
+
+    async function loadDiagnostics() {
+        statusValue('backendStatus', 'Prüfe…', 'warn');
+        try {
+            const response = await fetch('/api/health/config', { cache: 'no-store' });
+            if (!response.ok) throw new Error('diagnostics unavailable');
+            const diagnostics = await response.json();
+            statusValue('backendStatus', diagnostics.backend_healthy ? 'Online' : 'Nicht verfügbar', diagnostics.backend_healthy ? 'ok' : 'down');
+            if (diagnostics.storage_mode === 'mongodb') {
+                statusValue('storageStatus', 'Atlas verbunden', 'ok');
+                $('storageDetail').textContent = 'Öffentliche Rezensionen werden dauerhaft in MongoDB Atlas gespeichert.';
+            } else {
+                statusValue('storageStatus', 'Lokaler Fallback', 'warn');
+                $('storageDetail').textContent = 'Entwicklungs-/Offline-Modus: Rezensionen liegen in der lokalen JSON-Datei.';
+            }
+            const config = diagnostics.config || {};
+            const complete = config.mongo_url_configured && config.db_name_configured && config.cors_origins_configured;
+            statusValue('configStatus', complete ? 'Bereit' : 'Unvollständig', complete ? 'ok' : 'warn');
+            const chip = (label, ok) => `<span class="config-chip">${ok ? '✓' : '○'} ${label}</span>`;
+            $('configChips').innerHTML = chip('Mongo-Verbindung konfiguriert', config.mongo_url_configured) + chip('Datenbankname konfiguriert', config.db_name_configured) + chip('CORS konfiguriert', config.cors_origins_configured) + chip('Produktionsmodus', config.production_mode) + '<span class="config-chip">Keine Werte offengelegt</span>';
+            $('statusCheckedAt').textContent = `Zuletzt sicher geprüft: ${new Date().toLocaleTimeString('de-DE')}`;
+        } catch (_) {
+            statusValue('backendStatus', 'Nicht erreichbar', 'down');
+            statusValue('storageStatus', 'Unbekannt', 'down');
+            statusValue('configStatus', 'Nicht prüfbar', 'down');
+            $('statusCheckedAt').textContent = 'Status konnte nicht geladen werden.';
+            $('configChips').innerHTML = '<span class="config-chip">Keine geheimen Werte offengelegt</span>';
         }
     }
 
@@ -1272,6 +1334,8 @@
     // ---- Actions ----
     $('homeNavBtn').addEventListener('click', () => { renderHistory(); loadReviews(); showView('home'); });
     $('auditNavBtn').addEventListener('click', () => showView('import'));
+    $('statusNavBtn').addEventListener('click', () => { showView('home'); loadDiagnostics(); setTimeout(() => $('statusSection').scrollIntoView({ behavior: 'smooth' }), 50); });
+    $('refreshStatusBtn').addEventListener('click', loadDiagnostics);
     $('heroAuditBtn').addEventListener('click', () => showView('import'));
     $('historyJumpBtn').addEventListener('click', () => $('historySection').scrollIntoView({ behavior: 'smooth' }));
     $('clearHistoryBtn').addEventListener('click', () => { localStorage.removeItem(AUDIT_HISTORY_KEY); renderHistory(); toast('Lokale Erfolgshistorie gelöscht.'); });
@@ -1339,6 +1403,7 @@
     renderFilterPresets();
     updateReviewEligibility();
     loadReviews();
+    loadDiagnostics();
     const sharedParam = new URLSearchParams(location.search).get('certificate');
     if (sharedParam) {
         try { showSharedCertificate(decodeCertificate(sharedParam)); }
